@@ -1,0 +1,140 @@
+Symbol,exchange_name,pair_name,Currency,Keywords,Coinmarketcap,marketcap,Marketcap_Tier,Tweets_Tier,Blacklisted,Shortable
+SAN,HitBTC,SAN/ETH,Santiment Network Token,"Santiment Network Token, $SAN",https://coinmarketcap.com/currencies/santiment/,33204098,7,7,1,1
+SOLVE,KuCoin,SOLVE/BTC,SOLVE Coin,"SOLVE Coin, $SOLVE",https://coinmarketcap.com/currencies/solve/,37324520,7,8,0,0
+DOGE,Binance,DOGE/USDT,Dogecoin,"Dogecoin, $DOGE",https://coinmarketcap.com/currencies/dogecoin/,331044566,5,3,1,0
+STORJ,Binance,STORJ/BTC,Storj,"Storj, $STORJ",https://coinmarketcap.com/currencies/storj/,20409857,7,6,0,0
+HC,Binance,HC/BTC,HyperCash,"HyperCash, $HC",https://coinmarketcap.com/currencies/hypercash/,122507304,5,7,0,0
+IOST,Binance,IOST/USDT,IOST Coin,"IOST Coin, $IOST, #IOST",https://coinmarketcap.com/currencies/iostoken/,105772016,5,7,0,0
+VSYS,KuCoin,VSYS/BTC,V Systems,"V Systems, $VSYS",https://coinmarketcap.com/currencies/v-systems/,351567409,5,7,0,0
+NRG,KuCoin,NRG/BTC,Energi Coin,"Energi Coin, $NRG, #NRG",https://coinmarketcap.com/currencies/energi/,134459352,5,7,0,0
+FTM,Binance,FTM/BTC,Fantom Coin,"Fantom Coin, $FTM",https://coinmarketcap.com/currencies/fantom/,27179846,7,5,0,0
+R,HitBTC,R/BTC,Revain Coin,Revain,https://coinmarketcap.com/currencies/revain/,38977108,7,8,0,0
+BAT,Binance,BAT/BTC,Basic Attention Token,"Basic Attention Token, $BAT",https://coinmarketcap.com/currencies/basic-attention-token/,227798222,5,5,0,0
+WAVES,Binance,WAVES/BTC,Waves Coin,"Waves Coin, $WAVES",https://coinmarketcap.com/currencies/waves/,123267286,5,6,0,0
+MAID,HitBTC,MAID/BTC,MaidSafeCoin,"MaidSafeCoin, $MAID",https://coinmarketcap.com/currencies/maidsafecoin/,75238966,6,7,0,0
+LAMB,Bittrex,LAMB/BTC,Lambda Coin,"Lambda Coin, $LAMB",https://coinmarketcap.com/currencies/lambda/,123015322,5,7,0,0
+POLY,Binance,POLY/BTC,Polymath,"Polymath, $POLY",https://coinmarketcap.com/currencies/polymath-network/,16321902,7,5,0,0
+XMR,Binance,XMR/BTC,Monero,"Monero, XMR",https://coinmarketcap.com/currencies/monero/,1451170205,3,3,0,1
+STEEM,Binance,STEEM/BTC,Steem,"Steem, $STEEM",https://coinmarketcap.com/currencies/steem/,58304407,6,3,0,0
+PAX,Binance,PAX/USDT,Paxos Standard Token,"Paxos Standard Token, $PAX, #PAX",https://coinmarketcap.com/currencies/paxos-standard-token/,190079755,5,5,0,0
+DGD,Binance,DGD/BTC,DigixDAO,"DigixDAO, $DGD",https://coinmarketcap.com/currencies/digixdao/,39131927,7,7,0,0
+STRAT,Binance,STRAT/BTC,Stratis,"Stratis, $STRAT",https://coinmarketcap.com/currencies/stratis/,37645767,7,5,0,0
+MANA,Binance,MANA/BTC,Decentraland,"Decentraland, $MANA",https://coinmarketcap.com/currencies/decentraland/,36180517,7,5,0,0
+KMD,Binance,KMD/BTC,Komodo Coin,"Komodo Coin, $KMD, #KMD",https://coinmarketcap.com/currencies/komodo/,90249732,6,6,0,0
+NANO,Binance,NANO/BTC,Nano,"Nano Coin, $NANO",https://coinmarketcap.com/currencies/nano/,137588982,5,5,0,0
+LINK,Binance,LINK/BTC,Chainlink,"Chainlink, $LINK",https://coinmarketcap.com/currencies/chainlink/,819377228,4,4,0,1
+OMG,Binance,OMG/BTC,OmiseGO,"OmiseGO, $OMG",https://coinmarketcap.com/currencies/omisego/,167382457,5,6,0,1
+CELR,Binance,CELR/USDT,Celer Network,"Celer Network, $CELR",https://coinmarketcap.com/currencies/celer-network/,27129529,7,7,0,0
+DGTX,HitBTC,DGTX/BTC,Digitex Futures,"Digitex Futures, $DGTX",https://coinmarketcap.com/currencies/digitex-futures/,40041059,7,8,0,0
+KNC,Binance,KNC/BTC,Kyber Network,"Kyber Network, $KNC",https://coinmarketcap.com/currencies/kyber-network/,27796795,7,7,0,0
+ADA,Binance,ADA/BTC,Cardano,"Cardano, $ADA, #ADA",https://coinmarketcap.com/currencies/cardano/,1255456813,3,3,0,1
+QTUM,Binance,QTUM/USDT,Qtum,"Qtum, $QTUM, QTUM",https://coinmarketcap.com/currencies/qtum/,243923073,5,5,0,0
+NAV,Binance,NAV/BTC,NavCoin,"NavCoin, $NAV",https://coinmarketcap.com/currencies/nav-coin/,6666959,8,7,0,0
+FCT,Bittrex,FCT/BTC,Factom,"Factom, $FCT, #FCT",https://coinmarketcap.com/currencies/factom/,31002867,7,6,0,0
+QNT,Bittrex,QNT/BTC,Quant Coin,"Quant Coin, $QNT",https://coinmarketcap.com/currencies/quant/,82614964,6,6,0,0
+ARK,Binance,ARK/BTC,Ark Coin,"Ark Coin, $ARK",https://coinmarketcap.com/currencies/ark/,24791193,7,7,0,0
+UUU,HitBTC,UUU/BTC,U Network,"U Network, $UUU",https://coinmarketcap.com/currencies/u-network/,17520960,7,7,0,0
+FUN,Binance,FUN/BTC,FunFair Coin,"FunFair Coin, $FUN",https://coinmarketcap.com/currencies/funfair/,15459183,7,7,0,0
+SNT,Binance,SNT/BTC,Status Coin,"Status Coin, $SNT",https://coinmarketcap.com/currencies/status/,61147493,6,7,0,0
+NAS,Binance,NAS/BTC,Nebulas Coin,"Nebulas Coin, $NAS",https://coinmarketcap.com/currencies/nebulas-token/,32495274,7,7,0,0
+CS,KuCoin,CS/BTC,Credits,"Credits Coin, $CS",https://coinmarketcap.com/currencies/credits/,8867181,8,7,0,0
+MCO,Binance,MCO/BTC,Crypto.com,"Crypto.com Coin, $MCO",https://coinmarketcap.com/currencies/crypto-com/,53063843,6,6,0,0
+ZRX,Binance,ZRX/BTC,0x,"0x Coin, $ZRX",https://coinmarketcap.com/currencies/0x/,100548465,5,7,0,1
+CTXC,Bittrex,CTXC/BTC,Cortex Coin,"Cortex Coin, $CTXC",https://coinmarketcap.com/currencies/cortex/,18041318,7,8,0,0
+ATOM,Binance,ATOM/BTC,Cosmos,"Cosmos Coin, $ATOM",https://coinmarketcap.com/currencies/cosmos/,532883957,4,7,0,0
+NULS,Binance,NULS/BTC,NULS Coin,"NULS Coin, $NULS",https://coinmarketcap.com/currencies/nuls/,30824544,7,7,0,0
+ZIL,Binance,ZIL/BTC,Zilliqa,"Zilliqa, $ZIL, #ZIL",https://coinmarketcap.com/currencies/zilliqa/,64718102,6,5,0,0
+XEM,Binance,XEM/BTC,NEM Coin,"NEM Coin, $XEM, $NEM, #XEM, #NEM",https://coinmarketcap.com/currencies/nem/,502611960,4,6,0,0
+ENJ,Binance,ENJ/BTC,Enjin Coin,"Enjin Coin, $ENJ",https://coinmarketcap.com/currencies/enjin-coin/,49168010,7,7,0,0
+LRC,Binance,LRC/BTC,Loopring,"Loopring, $LRC",https://coinmarketcap.com/currencies/loopring/,32368026,7,6,0,0
+ETN,HitBTC,ETN/BTC,Electroneum Coin,"Electroneum Coin, $ETN",https://coinmarketcap.com/currencies/electroneum/,38722788,7,8,0,0
+ETP,HitBTC,ETP/BTC,Metaverse ETP,"Metaverse ETP, $ETP",https://coinmarketcap.com/currencies/metaverse/,63112843,6,8,0,1
+BNB,Binance,BNB/USDT,Binance Coin,"Binance Coin, $BNB, #BNB",https://coinmarketcap.com/currencies/binance-coin/,4349279770,3,3,1,1
+BSV,HitBTC,BSV/BTC,Bitcoin SV,"Bitcoin SV, $BSV, #BSV",https://coinmarketcap.com/currencies/bitcoin-sv/,2467377851,3,4,1,1
+MIOTA,Binance,IOTA/BTC,IOTA,"IOTA, $IOTA, MIOTA",https://coinmarketcap.com/currencies/iota/,678242632,4,3,0,1
+IGNIS,HitBTC,IGNIS/ETH,Ignis,"Ignis Coin, $IGNIS",https://coinmarketcap.com/currencies/ignis/,21257735,7,7,0,0
+PPT,Binance,PPT/BTC,Populous,"Populous, $PPT",https://coinmarketcap.com/currencies/populous/,30246510,7,3,0,0
+DASH,Binance,DASH/BTC,Dash Coin,"$DASH, Dash Coin, #DASH",https://coinmarketcap.com/currencies/dash/,832574844,4,5,0,1
+USDT,Binance,BTC/USDT,Tether,"Tether, USDT, $USDT",https://coinmarketcap.com/currencies/tether/,4047151514,3,3,1,0
+XVG,Binance,XVG/BTC,Verge Coin,"Verge Coin, $XVG, #XVG",https://coinmarketcap.com/currencies/verge/,83820065,6,5,0,0
+GXS,Binance,GXS/BTC,GXChain,"GXChain, $GXS, #GXS",https://coinmarketcap.com/currencies/gxchain/,67673996,6,6,0,0
+XRP,Binance,XRP/BTC,Ripple,"Ripple, XRP",https://coinmarketcap.com/currencies/ripple/,11648036006,2,2,0,1
+SNX,KuCoin,SNX/BTC,Synthetix Network Token,"Synthetix Network Token, $SNX",https://coinmarketcap.com/currencies/synthetix-network-token/,37624890,7,8,0,0
+TOMO,KuCoin,TOMO/BTC,TomoChain,"TomoChain, $TOMO",https://coinmarketcap.com/currencies/tomochain/,30554493,7,5,0,0
+XLM,Binance,XLM/USDT,Stellar,"Lumens $XLM, #XLM",https://coinmarketcap.com/currencies/stellar/,1364089181,3,4,0,1
+GRIN,HitBTC,GRIN/BTC,Grin Coin,"Grin Coin, $GRIN",https://coinmarketcap.com/currencies/grin/,48739354,7,7,0,0
+TRX,Binance,TRX/USDT,TRON Coin,"TRON, $TRX, #TRX",https://coinmarketcap.com/currencies/tron/,1165475435,3,3,0,1
+REN,Binance,REN/BTC,Ren Coin,"Ren Coin, $REN",https://coinmarketcap.com/currencies/ren/,71576474,6,5,0,0
+ODE,KuCoin,ODE/USDT,ODEM Coin,"ODEM Coin, $ODE",https://coinmarketcap.com/currencies/odem/,37391799,7,8,0,0
+ZEC,Binance,ZEC/BTC,Zcash,"Zcash, ZEC, $ZEC",https://coinmarketcap.com/currencies/zcash/,368698001,5,3,0,1
+BTC,Binance,BTC/USDT,Bitcoin,"Bitcoin, BTC",https://coinmarketcap.com/currencies/bitcoin/,190176826721,1,1,0,1
+EOS,Binance,EOS/USDT,EOS,EOS,https://coinmarketcap.com/currencies/eos/,3407832447,3,3,0,1
+LTC,Binance,LTC/USDT,Litecoin,"Litecoin, LTC",https://coinmarketcap.com/currencies/litecoin/,4719830137,3,2,0,1
+RVN,Binance,RVN/BTC,Ravencoin,"Ravencoin, $RVN, #RVN",https://coinmarketcap.com/currencies/ravencoin/,147210020,5,4,0,0
+MONA,Bittrex,MONA/BTC,MonaCoin,"MonaCoin, $MONA",https://coinmarketcap.com/currencies/monacoin/,99738806,6,5,0,0
+THETA,Binance,THETA/BTC,THETA Coin,"THETA Coin, $THETA",https://coinmarketcap.com/currencies/theta/,108371699,5,7,0,0
+FSN,Bittrex,FSN/BTC,Fusion Coin,"Fusion Coin, $FSN",https://coinmarketcap.com/currencies/fusion/,25929006,7,8,0,0
+SMT,HitBTC,SMT/BTC,SmartMesh,"SmartMesh, $SMT",https://coinmarketcap.com/currencies/smartmesh/,6502558,8,8,0,0
+QKC,Binance,QKC/BTC,QuarkChain,"QuarkChain, $QKC",https://coinmarketcap.com/currencies/quarkchain/,30177813,7,6,0,0
+ELF,Binance,ELF/BTC,aelf Coin,"aelf Coin, $ELF",https://coinmarketcap.com/currencies/aelf/,44511624,7,7,0,0
+MKR,HitBTC,MKR/BTC,Maker,"Maker Coin, $MKR",https://coinmarketcap.com/currencies/maker/,505677544,4,8,0,0
+SC,Binance,SC/BTC,Siacoin,"Siacoin, $SC",https://coinmarketcap.com/currencies/siacoin/,82108521,6,5,0,0
+LOOM,Binance,LOOM/BTC,Loom Network,"Loom Network, $LOOM",https://coinmarketcap.com/currencies/loom-network/,29866793,7,7,0,0
+BTS,Binance,BTS/BTC,BitShares,"BitShares, $BTS, #BTS",https://coinmarketcap.com/currencies/bitshares/,113300304,5,5,0,0
+AION,Binance,AION/BTC,Aion Coin,"Aion Coin, $AION",https://coinmarketcap.com/currencies/aion/,25007589,7,7,0,0
+ICX,Binance,ICX/BTC,ICON Coin,"ICON Coin, $ICX, #ICX",https://coinmarketcap.com/currencies/icon/,100114797,5,6,0,0
+DENT,Binance,DENT/BTC,Dent Coin,"Dent Coin, $DENT",https://coinmarketcap.com/currencies/dent/,34807442,7,6,0,0
+ABT,Bittrex,ABT/BTC,Arcblock,"Arcblock, $ABT",https://coinmarketcap.com/currencies/arcblock/,18456409,7,7,0,0
+ZEN,Binance,ZEN/BTC,Horizen Coin,"Horizen Coin, $ZEN",https://coinmarketcap.com/currencies/zencash/,37205694,7,7,0,0
+ENG,Binance,ENG/BTC,Enigma Coin,"Enigma Coin, $ENG",https://coinmarketcap.com/currencies/enigma/,29711921,7,7,0,0
+RIF,KuCoin,RIF/BTC,RIF Token,"RIF Token, $RIF",https://coinmarketcap.com/currencies/rif-token/,67616703,6,8,0,0
+SBD,HitBTC,SBD/BTC,Steem Dollars,"Steem Dollars, SBD, $SBD",https://coinmarketcap.com/currencies/steem-dollars/,6418093,8,7,0,0
+RDD,Bittrex,RDD/BTC,ReddCoin,"ReddCoin, $RDD",https://coinmarketcap.com/currencies/reddcoin/,36254236,7,5,0,0
+C20,HitBTC,C20/BTC,CRYPTO20 Coin,"CRYPTO20 Coin, $C20",https://coinmarketcap.com/currencies/c20/,23133317,7,8,0,0
+INS,Binance,INS/BTC,Insolar,"Insolar, $INS",https://coinmarketcap.com/currencies/insolar/,6708254,8,7,0,0
+VET,Binance,VET/USDT,VeChain,"VeChain, $VET",https://coinmarketcap.com/currencies/vechain/,251961930,5,4,0,0
+USDC,Binance,BTC/USDC,USD Coin,"USD Coin, $USDC",https://coinmarketcap.com/currencies/usd-coin/,416256063,5,5,1,0
+NEXO,HitBTC,NEXO/BTC,Nexo Coin,"Nexo Coin, $NEXO",https://coinmarketcap.com/currencies/nexo/,45599575,7,7,0,0
+AOA,KuCoin,AOA/ETH,Aurora Coin,"Aurora Coin, $AOA, #AOA",https://coinmarketcap.com/currencies/auroracoin/,521257,8,7,0,0
+DAI,Bittrex,DAI/BTC,Dai Coin,"Dai Coin, $DAI",https://coinmarketcap.com/currencies/dai/,78469428,6,7,0,0
+PIVX,Binance,PIVX/BTC,PIVX,"PIVX, $PIVX",https://coinmarketcap.com/currencies/pivx/,19142845,7,6,0,0
+MATIC,Binance,MATIC/BTC,Matic Network,"Matic Network, $MATIC",https://coinmarketcap.com/currencies/matic-network/,34329581,7,5,0,0
+BCHABC,Binance,BCHABC/USDT,Bitcoin Cash,"BCH, $BCH, $BCHABC",https://coinmarketcap.com/currencies/bitcoin-cash/,5601322139,3,3,1,1
+AE,Binance,AE/BTC,Aeternity,"Aeternity, $AE",https://coinmarketcap.com/currencies/aeternity/,66731457,6,5,0,0
+TRUE,HitBTC,TRUE/BTC,TrueChain,"TrueChain, $TRUE",https://coinmarketcap.com/currencies/truechain/,28942348,7,7,0,0
+WTC,Binance,WTC/BTC,Waltonchain,"Waltonchain, $WTC",https://coinmarketcap.com/currencies/waltonchain/,59998012,6,5,0,0
+WAX,HitBTC,WAX/BTC,WAX Coin,"Wax Coin, $WAX",https://coinmarketcap.com/currencies/wax/,50080895,6,8,0,0
+BCD,Binance,BCD/BTC,Bitcoin Diamond,"Bitcoin Diamond, $BCD",https://coinmarketcap.com/currencies/bitcoin-diamond/,131156817,5,7,0,0
+NXT,HitBTC,NXT/BTC,Nxt Coin,"Nxt Coin, $NXT",https://coinmarketcap.com/currencies/nxt/,17399940,7,8,0,0
+TFUEL,Binance,TFUEL/USDT,Theta Fuel Coin,"Theta Fuel Coin, $TFUEL",https://coinmarketcap.com/currencies/theta-fuel/,22395478,7,7,0,0
+KCS,KuCoin,KCS/USDT,KuCoin Shares,"KuCoin Shares, $KCS, #KCS",https://coinmarketcap.com/currencies/kucoin-shares/,143251972,5,6,0,0
+ARDR,Binance,ARDR/BTC,Ardor Coin,"Ardor Coin, $ARDR, #ARDR",https://coinmarketcap.com/currencies/ardor/,55977717,6,7,0,0
+VIA,Binance,VIA/BTC,Viacoin,"Viacoin, $VIA",https://coinmarketcap.com/currencies/viacoin/,6157754,8,7,0,0
+NCASH,Binance,NCASH/ETH,Nucleus Vision,"Nucleus Vision, $NCASH",https://coinmarketcap.com/currencies/nucleus-vision/,6845141,8,7,0,0
+XTZ,HitBTC,XTZ/BTC,Tezos Coin,"Tezos Coin, $XTZ, #XTZ",https://coinmarketcap.com/currencies/tezos/,764137905,4,6,0,1
+ELA,KuCoin,ELA/BTC,Elastos,"Elastos, $ELA",https://coinmarketcap.com/currencies/elastos/,44514972,7,5,0,0
+BTM,HitBTC,BTM/BTC,Bytom,"Bytom, $BTM",https://coinmarketcap.com/currencies/bytom/,89797405,6,8,0,0
+NEO,Binance,NEO/USDT,NEO Coin,"NEO Coin, $NEO, #NEO",https://coinmarketcap.com/currencies/neo/,688176057,4,5,0,1
+TUSD,Binance,BTC/TUSD,TrueUSD,"TrueUSD, $TUSD, #TUSD",https://coinmarketcap.com/currencies/trueusd/,196489529,5,7,1,0
+SENT,HitBTC,SENT/BTC,Sentinel,"Sentinel Coin, $SENT",https://coinmarketcap.com/currencies/sentinel/,8226067,8,8,0,0
+SMART,HitBTC,SMART/BTC,SmartCash,"SmartCash, $SMART",https://coinmarketcap.com/currencies/smartcash/,7456554,8,7,0,0
+GAS,Binance,GAS/BTC,Gas Coin,"Gas Coin, $GAS",https://coinmarketcap.com/currencies/gas/,17020959,7,7,0,0
+DGB,HitBTC,DGB/BTC,DigiByte,"DigiByte, $DGB, #DGB",https://coinmarketcap.com/currencies/digibyte/,109243450,5,4,0,0
+REP,Binance,REP/BTC,Augur,"Augur, $REP",https://coinmarketcap.com/currencies/augur/,113262778,5,5,0,0
+GNT,Binance,GNT/BTC,Golem,"Golem Coin, $GNT",https://coinmarketcap.com/currencies/golem-network-tokens/,49326451,7,6,0,0
+BNT,Binance,BNT/BTC,Bancor Coin,"Bancor Coin, $BNT",https://coinmarketcap.com/currencies/bancor/,25313541,7,7,0,0
+POWR,Binance,POWR/BTC,Power Ledger Coin,"Power Ledger Coin, $POWR",https://coinmarketcap.com/currencies/power-ledger/,22779636,7,7,0,0
+IOTX,Binance,IOTX/BTC,IoTeX Coin,"IoTeX Coin, $IOTX",https://coinmarketcap.com/currencies/iotex/,19490897,7,7,0,0
+WAN,Binance,WAN/BTC,Wanchain,"Wanchain, $WAN",https://coinmarketcap.com/currencies/wanchain/,23093231,7,6,0,0
+IHT,Bittrex,IHT/BTC,IHT Real Estate Protocol,"IHT Real Estate Protocol, $IHT",https://coinmarketcap.com/currencies/iht-real-estate-protocol/,3532201,8,8,0,0
+XZC,Binance,XZC/BTC,Zcoin,"Zcoin, XZC, $XZC",https://coinmarketcap.com/currencies/zcoin/,54568353,6,5,0,0
+LSK,Binance,LSK/BTC,Lisk,"Lisk, $LSK, #LSK",https://coinmarketcap.com/currencies/lisk/,142669626,5,5,0,0
+ETH,Binance,ETH/USDT,Ethereum,"Ethereum, ETH",https://coinmarketcap.com/currencies/ethereum/,20825693387,2,2,0,1
+BTT,Binance,BTT/USDT,BitTorrent Coin,"BitTorrent Coin, $BTT",https://coinmarketcap.com/currencies/bittorrent/,132887220,5,6,0,0
+BCN,HitBTC,BCN/BTC,Bytecoin,"Bytecoin, $BCN, #BCN",https://coinmarketcap.com/currencies/bytecoin-bcn/,113400079,5,6,0,0
+BTG,Binance,BTG/BTC,Bitcoin Gold,"Bitcoin Gold, $BTG, #BTG",https://coinmarketcap.com/currencies/bitcoin-gold/,236033757,5,6,1,1
+LOKI,KuCoin,LOKI/BTC,Loki,"Loki Coin, $LOKI",https://coinmarketcap.com/currencies/loki/,5904614,8,8,0,0
+LCC,HitBTC,LCC/BTC,Litecoin Cash,"Litecoin Cash, $LCC",https://coinmarketcap.com/currencies/litecoin-cash/,9464657,8,8,0,0
+CMT,Binance,CMT/BTC,CyberMiles Coin,"CyberMiles Coin, $CMT",https://coinmarketcap.com/currencies/cybermiles/,24924873,7,7,0,0
+ETC,Binance,ETC/USDT,Ethereum Classic,"Ethereum Classic, $ETC, #ETC",https://coinmarketcap.com/currencies/ethereum-classic/,709630641,4,6,1,1
+EMC2,Bittrex,EMC2/BTC,Einsteinium,"Einsteinium, $EMC2",https://coinmarketcap.com/currencies/einsteinium/,11721822,7,7,0,0
