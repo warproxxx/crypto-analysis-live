@@ -1,3 +1,7 @@
+'''
+Contains module that for processing data. Until feature creation/
+'''
+
 import pandas as pd
 import numpy as np
 from utils.common_utils import get_root_dir

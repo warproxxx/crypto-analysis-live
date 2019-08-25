@@ -9,11 +9,11 @@ import numpy as np
 import datetime
 import time
 
-from twitter_stream import start_streaming
+from twitter_stream import twitter_stream
 from utils.common_utils import get_root_dir, merge_csvs
 from process import processor, get_sentiment, clean_further, create_cascades, add_keyword
 
-t = Thread(target=start_streaming)
+t = Thread(target=twitter_stream)
 t.start()
 
 print('Started Live Collection')
@@ -47,7 +47,7 @@ while True:
     #Use this logic later but for testing not
     # currentTime = datetime.datetime.now(datetime.timezone.utc)
 
-    # if currentTime.minute % 5 != 0:
+    # if currentTime.minute % 30 != 0: #change logic to better run it every 30 mins
     #     time.sleep(5)
     # else:
     time.sleep(10)
@@ -83,6 +83,8 @@ while True:
 
     df = df[df['keyword'] != 'invalid']
     df.groupby('keyword').apply(save_to_file)
+    
+    #For feature calculation only use those which were not blacklisted. Price too
 
         #CASCADING IS NOT REQUIRED TO CALCULATE DAILY FEATURES. DO THOSE AT THE END OF THE DATA
     # if 24hour:

@@ -108,7 +108,7 @@ class MyStreamListener(tweepy.StreamListener):
         # all parameters possible here:
         # https://dev.twitter.com/overview/api/tweets
 
-def start_streaming():
+def twitter_stream():
     df = pd.read_csv(os.path.join(get_root_dir(), 'keywords.csv'))
     search_query = []
 
