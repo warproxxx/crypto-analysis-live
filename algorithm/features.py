@@ -1,23 +1,29 @@
 '''
-Contains the modules required for features creation
+Contains the modules required for features creation and backtesting
 '''
 
 import pandas as pd
-from glob import glob
-import swifter
 import numpy as np
-import matplotlib.pyplot as plt
-import os
-import ta
+import csv
 
-def merge_time(df):
-    ret = {}
-    ret['Open'] = df.iloc[0]['Open']
-    ret['High'] = max(df['High'])
-    ret['Low'] = min(df['Low'])
-    ret['Close'] = df.iloc[-1]['Close']
-    ret['Volume'] = sum(df['Volume'])
-    return pd.Series(ret)
+from glob import glob
+import os
+import json
+import io
+
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+from backtrader_plotting import Bokeh
+from backtrader_plotting.schemes import Tradimo
+from bokeh.plotting import figure, output_file, save
+
+import swifter
+import ta
+import backtrader as bt
+
+from utils.get_price_data import get_price
+from utils.common_utils import get_root_dir
 
 #maybe create a percentage of influential users
 def tweets_to_features(group):
@@ -56,21 +62,30 @@ def tweets_to_features(group):
     
     return pd.Series(features)
 
-def get_features(coin_name, minutes, test='forwardtest'):
+def get_features(coin_name, duration='30Min', minutes=30):
     '''
-    Create features for the given coin
+    Create features for the given coin. Have file for features. do after the given point only.
     '''
+    features_dir = get_root_dir() + "/data/features"
+
+    if not os.path.isdir(features_dir):
+        os.makedirs(features_dir)
+    
+    features_file = features_dir + '/{}.csv'.format(coin_name)
+    tweet_file = 'data/coinwise/{}.csv'.format(coin_name)
+
     userwise_inf_file = os.path.join(dir, 'data/userwise_influence.csv')
     userwise_inf = pd.read_csv(userwise_inf_file)
     
-    price_df = pd.read_csv('data/{}/processed_price/{}.csv'.format(test, coin_name))
-    tweet_df = pd.read_csv('data/{}/coinwise/{}.csv'.format(test, coin_name))
+    price_df = get_price(duration)
+    tweet_df = pd.read_csv(tweet_file)
     
     price_df['Time'] = pd.to_datetime(price_df['Time'], unit='s')
     tweet_df['Time'] = pd.to_datetime(tweet_df['Time'])
     
-    tweet_df = tweet_df.merge(userwise_inf[['username', 'avg_influence', 'total_influence']], left_on='User', right_on='username')
-    price_df = price_df.groupby(pd.Grouper(key='Time', freq='{}Min'.format(str(minutes)))).apply(merge_time)
+    tweet_df = tweet_df.merge(userwise_inf[['username', 'avg_influence', 'total_influence']], left_on='User', right_on='username', how='outer')
+    tweet_df['avg_influence'] = tweet_df['avg_influence'].fillna(2) #half the average if that user does not exist. This number goes down as our dataset goes up
+    tweet_df['total_influence'] = tweet_df['avg_influence'].fillna(6) #half the average for same reason
 
     new_df = pd.DataFrame()
     new_df['time'] = price_df.index
@@ -87,4 +102,336 @@ def get_features(coin_name, minutes, test='forwardtest'):
     features = features.join(price_df, how='outer')
     features = features.reset_index()
     features = features.fillna(0)
+
+    os.remove(tweet_file)
+
+    if os.path.isfile(features_file):
+        old_features = pd.read_csv(features_file)
+        old_features['Time'] = pd.to_datetime(features['Time'])
+        features = pd.concat([old_features, features])
+        features = features.sort_values('Time')
+        features = features.drop_duplicates('Time',keep='last')
+
+    features.to_csv(features_file)
+
     return features
+    
+def create_plot(df, col1, col1_display, col3="Open", col3_display="Price"):
+    hovertext = []
+
+    for i in range(len(df['Time'])):
+        hovertext.append('{}: '.format(col1_display)+str(round(df[col1][i], 2))
+                         +'<br>{}: '.format(col3_display)+str(round(df[col3][i], 2))
+                        )
+    
+    fig = go.Figure(layout=go.Layout(xaxis={'spikemode': 'across'}))
+    
+    
+
+    fig.add_trace(go.Scatter(x=df['Time'], y=df[col1], name=col1_display, text=hovertext,
+                            yaxis='y3', marker={'color': '#1f77b4'}
+                            ))
+    
+    fig.add_trace(go.Scatter(x=df['Time'], y=df[col3], name=col3_display, text=hovertext, 
+                             marker={'color': '#d62728'}))
+
+
+    fig.update_layout(xaxis_rangeslider_visible=True)
+
+    fig.update_layout(xaxis=dict(
+                      domain=[0, 0.92]
+                    ),
+                      yaxis=dict(
+                        title=col3_display,
+                        titlefont=dict(
+                            color="#d62728"
+                        ),
+                        tickfont=dict(
+                            color="#d62728"
+                        )
+                    ),
+                    yaxis3=dict(
+                    title=col1_display,
+                    titlefont=dict(
+                        color="#1f77b4"
+                    ),
+                    tickfont=dict(
+                        color="#1f77b4"
+                    ),
+                    anchor="x",
+                    overlaying="y",
+                    side="right",
+                    position=0.98
+                    )  
+                )
+    return fig
+
+def resampler(df):
+    ret = {}
+    ret['Open'] = df['Open'].iloc[0]
+    ret['Close'] = df['Close'].iloc[-1]
+    ret['High'] = max(df['High'])
+    ret['Low'] = min(df['Low'])
+    ret['Volume'] = sum(df['Volume'])
+    return pd.Series(ret)
+
+class PandasData_Custom(bt.feeds.PandasData):
+    lines = ('macd',)
+    params = (
+        ('datetime', 0),
+        ('open', 1),
+        ('high', 2),
+        ('low', 3),
+        ('close', 4),
+        ('volume', 5),
+        ('macd', 6)
+    )
+
+class tradeStrategy(bt.Strategy):
+    def __init__(self):
+        global long_macd_threshold, long_per_threshold, long_close_threshold, long_close_threshold, short_per_threshold, short_close_threshold
+        self.long_macd_threshold = long_macd_threshold
+        self.long_per_threshold = long_per_threshold
+        self.long_close_threshold = long_close_threshold
+        
+        self.short_macd_threshold = long_close_threshold
+        self.short_per_threshold = short_per_threshold
+        self.short_close_threshold = short_close_threshold
+        
+        global symbol
+        self.symbol = symbol
+        self.current_positions = {}
+        self.current_positions[self.symbol] = 0
+        
+        
+        self.dataopen = self.datas[0].open
+        self.dataclose = self.datas[0].close
+        
+        self.macd = self.datas[0].macd
+        
+        self.buy_percentage = 0
+        self.order=None
+        self.buyprice=None
+        self.buycomm=None
+        self.position_time=None
+        
+        self.trades = io.StringIO()
+        self.trades_writer = csv.writer(self.trades)
+        
+        self.operations = io.StringIO()
+        self.operations_writer = csv.writer(self.operations)
+        
+        self.portfolioValue = io.StringIO()
+        self.portfolioValue_writer = csv.writer(self.portfolioValue)
+        
+    def log(self, txt, dt=None):
+        dt = dt or self.datas[0].datetime.datetime(0)
+#         print("Datetime: {} Message: {} Percentage: {}".format(dt, txt, self.buy_percentage))
+        
+    def notify_order(self, order):
+        if order.status in [order.Submitted, order.Accepted]:
+            return
+        
+        if order.status in [order.Completed]:
+            if order.isbuy():
+                ordertype = "BUY"
+                #self.log("BUY EXECUTED, Price: {}, Cost: {}, Comm: {}".format(order.executed.price, order.executed.value, order.executed.comm))
+                self.buyprice = order.executed.price
+                self.buycomm = order.executed.comm
+            else:
+                ordertype = "SELL"
+                #self.log("SELL EXECUTED, Price: {}, Cost: {}, Comm: {}".format(order.executed.price, order.executed.value, order.executed.comm))
+
+            self.trades_writer.writerow([self.datas[0].datetime.datetime(0), ordertype, order.executed.price, order.executed.value, order.executed.comm])
+        
+            self.bar_executed = len(self)
+        elif order.status in [order.Canceled, order.Margin, order.Rejected]:
+            self.log("Order Canceled/Margin/Rejected")
+            self.log(order.Rejected)
+            self.trades_writer.writerow([self.datas[0].datetime.datetime(0) , 'Rejection', 0, 0, 0])
+            
+        self.order = None
+    
+    def notify_trade(self, trade):
+        if not trade.isclosed:
+            return
+        
+        self.log('OPERATION PROFIT, GROSS: {}, NET: {}'.format(trade.pnl, trade.pnlcomm))
+        self.operations_writer.writerow([self.datas[0].datetime.datetime(0), trade.pnlcomm])
+    
+    def get_logs(self):
+        '''
+        Returns:
+        ________
+        portfolioValue (df):
+        Date and Value of portfolio
+        
+        trades (df):
+        'Date', 'Type', 'Price', 'Total Spent', 'Comission'
+        
+        operations (df):
+        'Date', 'Profit'
+        '''
+        self.portfolioValue.seek(0)
+        portfolioValueDf = pd.read_csv(self.portfolioValue, names=['Date', 'Value'])
+        
+        portfolioValueDf['Date'] = pd.to_datetime(portfolioValueDf['Date'])
+        portfolioValueDf = portfolioValueDf.set_index('Date')
+        portfolioValueDf = portfolioValueDf.resample('1D').agg({'Date': lambda x: x.iloc[0], 'Value': lambda x: x.iloc[-1]})['Date']
+        
+        self.trades.seek(0)
+        tradesDf = pd.read_csv(self.trades, names=['Date', 'Type', 'Price', 'Total Spent', 'Comission'])
+        
+        self.operations.seek(0)
+        operationsDf = pd.read_csv(self.operations, names=['Date', 'Profit'])
+        
+        return portfolioValueDf.reset_index(), tradesDf, operationsDf
+    
+    
+    def next(self):
+        self.portfolioValue_writer.writerow([self.datas[0].datetime.datetime(0), self.broker.getvalue()])
+        
+        if self.order:
+            return
+        
+        per_change = ((self.dataopen[0]/self.dataopen[-4]) - 1) * 100
+        
+        total_possible_size = (self.broker.get_cash()/self.dataopen[0]) * 0.95
+        
+            
+        if not self.position:
+            if self.macd > self.long_macd_threshold and per_change < self.long_per_threshold:
+                self.log("LONG CREATE {}".format(self.dataopen[0]))
+                self.current_positions[self.symbol] = total_possible_size
+                
+                self.order = self.buy(size=self.current_positions[self.symbol])
+            elif self.macd < self.short_macd_threshold and per_change > self.short_per_threshold:
+                self.log("SHORT CREATE {}".format(self.dataopen[0]))
+                self.current_positions[self.symbol] = total_possible_size
+                
+                self.order = self.sell(size=self.current_positions[self.symbol])
+        else:
+            if self.position.size > 0:         
+                #LONG OPEN
+                if self.macd < self.long_close_threshold:
+                    self.log("LONG CLOSE {}".format(self.dataopen[0]))
+                    self.order = self.sell(size=self.current_positions[self.symbol])
+                    
+                    if self.macd < self.short_macd_threshold and per_change > self.short_per_threshold:
+                        self.log("SHORT CREATE {}".format(self.dataopen[0]))
+                        self.current_positions[self.symbol] = total_possible_size
+
+                        self.order = self.sell(size=self.current_positions[self.symbol])
+                else:
+                    self.log("HODL {}".format(self.dataopen[0]))
+                                
+            elif self.position.size < 0:
+                if self.macd > self.short_close_threshold:
+                    self.log("SHORT CLOSE {}".format(self.dataopen[0]))
+                    self.order = self.buy(size=self.current_positions[self.symbol])
+                    
+                    if self.macd > self.long_macd_threshold and per_change < self.long_per_threshold:
+                        self.log("LONG CREATE {}".format(self.dataopen[0]))
+                        self.current_positions[self.symbol] = total_possible_size
+
+                        self.order = self.buy(size=self.current_positions[self.symbol])
+                else:
+                    self.log("HODL {}".format(self.dataopen[0]))
+
+
+def perform_backtest(df, symbol, n_fast_par, n_slow_par, long_macd_threshold_par, long_per_threshold_par, long_close_threshold_par, short_macd_threshold_par, short_per_threshold_par, short_close_threshold_par, initial_cash=10000, comission=0.1):
+    #make these variables global
+    global n_fast
+    global n_slow
+
+    global long_macd_threshold
+    global long_per_threshold
+    global long_close_threshold
+    global short_macd_threshold
+    global short_per_threshold
+    global short_close_threshold
+
+    n_fast = n_fast_par
+    n_slow = n_slow_par
+
+    long_macd_threshold = long_macd_threshold_par
+    long_per_threshold = long_per_threshold_par
+    long_close_threshold = long_close_threshold_par
+    short_macd_threshold = short_macd_threshold_par
+    short_per_threshold = short_per_threshold_par
+    short_close_threshold = short_close_threshold_par
+
+    features_file = get_root_dir() + "/data/features/{}.csv".format(symbol)
+
+    df = pd.read_csv(features_file)
+
+    df['macd'] = ta.trend.macd(df['sentistrength_total'], n_fast=n_fast, n_slow=n_slow)
+    df['macd'] = df['macd'].fillna(0)
+
+    df['Time'] = pd.to_datetime(df['Time'])
+
+    
+    json_data = {}    
+
+    json_data['mean'] = df['macd'].mean()
+    json_data['std'] = df['macd'].std()
+
+    df['macd'] = (df['macd'] - json_data['mean'])/json_data['std']
+
+    curr_dir = get_root_dir() + "/data/backtest/{}".format(symbol)
+
+    if not os.path.exists(curr_dir):
+        os.makedirs(curr_dir)
+
+    with open(os.path.join(curr_dir, "data.json"), 'w') as fp:
+        json.dump(json_data, fp)
+
+    fig = create_plot(df, 'macd', 'SentiStength')
+
+    plotly_json = fig.to_json()
+
+    html = fig.to_html()
+
+    with open(curr_dir + '/plotly.html', 'w') as file:
+        file.write(html)
+
+    with open(curr_dir + '/plotly.json', 'w') as file:
+        file.write(plotly_json)
+
+    df = df[['Time', 'Open', 'High', 'Low', 'Close', 'Volume', 'macd']]
+    df.to_csv(os.path.join(curr_dir, "data.csv"), index=None)
+
+    data = PandasData_Custom(dataname=df)
+    cerebro = bt.Cerebro(cheat_on_open=True, maxcpus=None)
+    cerebro.adddata(data)
+
+    cerebro.addstrategy(tradeStrategy)
+
+    cerebro.addanalyzer(bt.analyzers.SharpeRatio)
+    cerebro.addanalyzer(bt.analyzers.Calmar)
+    cerebro.addanalyzer(bt.analyzers.drawdown)
+    cerebro.addanalyzer(bt.analyzers.Returns)
+    cerebro.addanalyzer(bt.analyzers.TradeAnalyzer)
+
+    cerebro.broker.setcash(initial_cash)
+    cerebro.broker.setcommission(comission/100)
+
+    run = cerebro.run()
+
+    portfolioValue, trades, operations = run[0].get_logs()
+
+    b = Bokeh(style='bar', plot_mode="tabs", scheme=Tradimo())
+    fig = cerebro.plot(b)
+    output_file(curr_dir + "/backtest.html")
+    save(fig[0][0])
+
+    df = df.set_index('Time')
+    df = df.resample('1D').apply(resampler)
+    df = df.reset_index()
+    df = df[['Time', 'Open']].merge(portfolioValue, left_on='Time', right_on='Date').drop('Time', axis=1)
+    df['hodl'] = (initial_cash/df['Open'].iloc[0]) * df['Open']
+    df = df.drop('Open', axis=1)
+
+    df.to_csv(curr_dir + '/portfolio.csv', index=None)
+    trades.to_csv(curr_dir + '/trades.csv', index=None)
+    operations.to_csv(curr_dir + '/operations.csv', index=None)

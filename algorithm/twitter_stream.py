@@ -11,9 +11,9 @@ import os
 from calendar import timegm
 
 def get_file_name():
-    fname = os.path.join(get_root_dir(), 'data/forwardtest/twitter_stream/' + str(datetime.datetime.now().date()) + '.csv')
+    fname = os.path.join(get_root_dir(), 'data/twitter_stream/' + str(datetime.datetime.now().date()) + '.csv')
     
-    stream_dir = os.path.join(get_root_dir(), 'data/forwardtest/twitter_stream')
+    stream_dir = os.path.join(get_root_dir(), 'data/twitter_stream')
 
     if not os.path.isdir(stream_dir):
         os.makedirs(stream_dir)
