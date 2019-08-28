@@ -19,12 +19,12 @@ from process import processor, get_sentiment, clean_further, add_keyword, clean_
 # t = Thread(target=twitter_stream)
 # t.start()
 
-print('Started Live Tweet Collection')
+# print('Started Live Tweet Collection')
 
-t = Thread(target=price_stream)
-t.start()
+# t = Thread(target=price_stream)
+# t.start()
 
-print('Started Live Price Collection')
+# print('Started Live Price Collection')
 
 dir = get_root_dir()
 temp_dir = os.path.join(dir, 'data/temp')
@@ -57,38 +57,46 @@ while True:
     # if currentTime.minute % 10 != 0: #change logic to better run it every 10 mins
     #     time.sleep(5)
 # else:
-    time.sleep(10)
+    # time.sleep(10)
     keywords = pd.read_csv(get_root_dir() + '/keywords.csv')
-
-    files = glob('data/twitter_stream/*')
+    print('read keywords')
+    
+    files = glob(os.path.join(dir, 'data/twitter_stream/*'))
     
     #copy these files into a folder so they can be processed independently
     for idx, file in enumerate(files):
         old_name = os.path.join(dir, files[idx])
         files[idx] = os.path.join(dir, files[idx].replace('twitter_stream/', 'temp/'))
         shutil.move(old_name, files[idx])
+        print('moving {}'.format(file))
 
+    print(files)
     combined = merge_csvs(files)
+    print('merged')
     df = pd.read_csv(combined)
     df, user_info = processor(df)
-
+    print('first processed')
     savefile = os.path.join(dir, 'data/all_cleaned.csv')
     profilefile = os.path.join(dir, 'data/cleaned_profile.csv')
 
     for file in files:
         os.remove(file)
 
-    df = get_sentiment(df)
+    print("getting sentiment and all")
     df = clean_further(df)
-    df = add_keyword(df)
 
     df['ID'] = df['ID'].astype(int)
     df['Time'] = pd.to_datetime(df['Time'], unit='s')
 
-    if not os.path.isfile(savefile):
-        df.to_csv(savefile, index=None)
-    else:
-        df.to_csv(savefile, index=None, mode='a')
+    df = add_keyword(df)
+    df = df[df['keyword'] != 'invalid'] #moving the order for faster testing
+    df = get_sentiment(df)
+
+    df.to_csv(savefile, index=None)
+    # if not os.path.isfile(savefile):
+    #     df.to_csv(savefile, index=None)
+    # else:
+    #     df.to_csv(savefile, index=None, mode='a')
 
     if os.path.isfile(profilefile):
         user_info = pd.concat([user_info, pd.read_csv(profilefile)])
@@ -96,7 +104,7 @@ while True:
 
     user_info.to_csv(profilefile, index=None)
 
-    df = df[df['keyword'] != 'invalid']
+    
     df.groupby('keyword').apply(save_to_file)
 
     storage_dir = os.path.join(dir, 'data/storage')
@@ -108,6 +116,7 @@ while True:
     shutil.move(savefile, storagename)
     
     for idx, row in keywords.iterrows():
+        print(row['Symbol'])
         features = get_features(row['Symbol'])
         
         # if currentTime.minute % 30 != 0:

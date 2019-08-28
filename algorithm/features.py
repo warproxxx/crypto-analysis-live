@@ -29,14 +29,14 @@ from utils.common_utils import get_root_dir
 def tweets_to_features(group):
     features = {}
     
-    bots = group[group['predicted'] == 1]
-    humans = group[group['predicted'] == 0]
+    # bots = group[group['predicted'] == 1]
+    # humans = group[group['predicted'] == 0]
     
     features['number_of_tweets'] = len(group)
-    try:
-        features['percentage_bots'] = (len(bots)/len(group)) * 100
-    except:
-        features['percentage_bots'] = 0
+    # try:
+    #     features['percentage_bots'] = (len(bots)/len(group)) * 100
+    # except:
+    #     features['percentage_bots'] = 0
         
     features['total_influence'] = group['avg_influence'].sum()
     
@@ -74,25 +74,31 @@ def get_features(coin_name, duration='30Min', minutes=30):
     features_file = features_dir + '/{}.csv'.format(coin_name)
     tweet_file = 'data/coinwise/{}.csv'.format(coin_name)
 
-    userwise_inf_file = os.path.join(dir, 'data/userwise_influence.csv')
+    userwise_inf_file = os.path.join(get_root_dir(), 'data/userwise_influence.csv')
     userwise_inf = pd.read_csv(userwise_inf_file)
     
-    price_df = get_price(duration)
+    price_df = get_price(coin_name, duration)
     tweet_df = pd.read_csv(tweet_file)
     
-    price_df['Time'] = pd.to_datetime(price_df['Time'], unit='s')
-    tweet_df['Time'] = pd.to_datetime(tweet_df['Time'])
+    tweet_df['Time'] = pd.to_datetime(tweet_df['Time'], errors='coerce')
+    tweet_df = tweet_df.dropna(subset=['Time'])
+
+    tweet_df = tweet_df.sort_values['Time']
     
-    tweet_df = tweet_df.merge(userwise_inf[['username', 'avg_influence', 'total_influence']], left_on='User', right_on='username', how='outer')
+    tweet_df = tweet_df.merge(userwise_inf[['username', 'avg_influence', 'total_influence']], left_on='User', right_on='username', how='left')
     tweet_df['avg_influence'] = tweet_df['avg_influence'].fillna(2) #half the average if that user does not exist. This number goes down as our dataset goes up
     tweet_df['total_influence'] = tweet_df['avg_influence'].fillna(6) #half the average for same reason
 
     new_df = pd.DataFrame()
     new_df['time'] = price_df.index
 
+    new_df = new_df[new_df['time'] > tweet_df.iloc[0]['Time']] #only after the first
+
     tweet_df = tweet_df.rename(columns={'Time': 'time'})
     tweet_df = tweet_df.sort_values('time')
     new_df['time_group'] = new_df['time']
+
+
     tweet_df = pd.merge_asof(tweet_df, new_df, on='time', direction='nearest')
     
     tweet_df = tweet_df[((tweet_df['time_group'] - tweet_df['time']).astype(int) // 10 ** 9).abs() < (minutes*60)]
@@ -339,7 +345,7 @@ class tradeStrategy(bt.Strategy):
                     self.log("HODL {}".format(self.dataopen[0]))
 
 
-def perform_backtest(df, symbol, n_fast_par, n_slow_par, long_macd_threshold_par, long_per_threshold_par, long_close_threshold_par, short_macd_threshold_par, short_per_threshold_par, short_close_threshold_par, initial_cash=10000, comission=0.1):
+def perform_backtest(df, symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par, long_per_threshold_par, long_close_threshold_par, short_macd_threshold_par, short_per_threshold_par, short_close_threshold_par, initial_cash=10000, comission=0.1):
     #make these variables global
     global n_fast
     global n_slow
@@ -350,6 +356,7 @@ def perform_backtest(df, symbol, n_fast_par, n_slow_par, long_macd_threshold_par
     global short_macd_threshold
     global short_per_threshold
     global short_close_threshold
+    global symbol
 
     n_fast = n_fast_par
     n_slow = n_slow_par
@@ -360,6 +367,7 @@ def perform_backtest(df, symbol, n_fast_par, n_slow_par, long_macd_threshold_par
     short_macd_threshold = short_macd_threshold_par
     short_per_threshold = short_per_threshold_par
     short_close_threshold = short_close_threshold_par
+    symbol = symbol_par
 
     features_file = get_root_dir() + "/data/features/{}.csv".format(symbol)
 
@@ -367,6 +375,7 @@ def perform_backtest(df, symbol, n_fast_par, n_slow_par, long_macd_threshold_par
 
     df['macd'] = ta.trend.macd(df['sentistrength_total'], n_fast=n_fast, n_slow=n_slow)
     df['macd'] = df['macd'].fillna(0)
+    #calculation has repetition. A lot of. Avoid that
 
     df['Time'] = pd.to_datetime(df['Time'])
 
@@ -382,9 +391,6 @@ def perform_backtest(df, symbol, n_fast_par, n_slow_par, long_macd_threshold_par
 
     if not os.path.exists(curr_dir):
         os.makedirs(curr_dir)
-
-    with open(os.path.join(curr_dir, "data.json"), 'w') as fp:
-        json.dump(json_data, fp)
 
     fig = create_plot(df, 'macd', 'SentiStength')
 
@@ -407,9 +413,9 @@ def perform_backtest(df, symbol, n_fast_par, n_slow_par, long_macd_threshold_par
 
     cerebro.addstrategy(tradeStrategy)
 
-    cerebro.addanalyzer(bt.analyzers.SharpeRatio)
+    cerebro.addanalyzer(bt.analyzers.SharpeRatio_A)
     cerebro.addanalyzer(bt.analyzers.Calmar)
-    cerebro.addanalyzer(bt.analyzers.drawdown)
+    cerebro.addanalyzer(bt.analyzers.DrawDown)
     cerebro.addanalyzer(bt.analyzers.Returns)
     cerebro.addanalyzer(bt.analyzers.TradeAnalyzer)
 
@@ -423,7 +429,7 @@ def perform_backtest(df, symbol, n_fast_par, n_slow_par, long_macd_threshold_par
     b = Bokeh(style='bar', plot_mode="tabs", scheme=Tradimo())
     fig = cerebro.plot(b)
     output_file(curr_dir + "/backtest.html")
-    save(fig[0][0])
+    # save(fig[0][0])
 
     df = df.set_index('Time')
     df = df.resample('1D').apply(resampler)
@@ -435,3 +441,6 @@ def perform_backtest(df, symbol, n_fast_par, n_slow_par, long_macd_threshold_par
     df.to_csv(curr_dir + '/portfolio.csv', index=None)
     trades.to_csv(curr_dir + '/trades.csv', index=None)
     operations.to_csv(curr_dir + '/operations.csv', index=None)
+
+    with open(os.path.join(curr_dir, "data.json"), 'w') as fp:
+        json.dump(json_data, fp)

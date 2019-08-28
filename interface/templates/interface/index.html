@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+	{% load staticfiles %}
+	{% load widget_tweaks %}
+	{% load mathfilters %}
+    <title>Dashboard</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="{% static 'interface/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+
+    <!-- MetisMenu CSS -->
+    <link href="{% static 'interface/vendor/metisMenu/metisMenu.min.css' %}" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="{% static 'interface/dist/css/sb-admin-2.css' %}" rel="stylesheet">
+
+
+    <!-- Custom Fonts -->
+    <link href="{% static 'interface/vendor/font-awesome/css/font-awesome.min.css' %}" rel="stylesheet" type="text/css">
+	
+	<link href="{% static 'interface/vendor/datatables-plugins/dataTables.bootstrap.css' %}" rel="stylesheet">
+
+    <!-- DataTables Responsive CSS -->
+    <link href="{% static 'interface/vendor/datatables-responsive/dataTables.responsive.css' %}" rel="stylesheet">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.3.1/css/all.css" integrity="sha384-mzrmE5qonljUremFsqc01SB46JvROS7bZs3IO2EmfFsd15uHvIt+Y8vEf7N7fWAU" crossorigin="anonymous">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+<body>
+    <div id="wrapper"></div>
+
+        <!-- Navigation -->
+        
+
+        <div id="page-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="page-header">Dashboard <button class="btn btn-info" data-toggle="modal" data-target="#aboutModel"> <i class="fa fa-book" aria-hidden="true"></i> About Model</button></h1>
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+
+            <div class="row">
+                    <div class="panel panel-default">
+                     
+                            <div class="panel-heading">
+                                Combined Performance
+                                <div class="pull-right">
+                                    <button type="button" class="btn btn-default btn-xs " data-toggle="modal" data-target="#modelperformanceExplanation"><i class="fa fa-question-circle" aria-hidden="true"></i> About</button>
+                                </div>
+                                
+                            </div>
+                            <div class="panel-body">
+                                
+                                <div class="col-md-12 col-lg-12 ">
+                                    <!-- <h4>Forward Testing Performance</h4> -->
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <tbody>
+                                            {% if forward_metrics %}
+                                            <tr>
+                                                {% for key, value in forward_metrics.items%} 											
+                                                        {% if forloop.counter == 1 %}
+                                                            <td style="background-color:#99fba5;"><b>{{ key }}:</b></td>
+                                                            <td style="background-color:#99fba5;">{{ value }} %</td>
+                                                        {% else %}
+                                                            <td style="background-color:c;"><b>{{ key }}:</b></td>
+                                                            <td>{{ value }} %</td>
+                                                            {% endif %}
+                                                     {% if forloop.counter == 2 or forloop.counter == 4 or forloop.counter == 6 or forloop.counter == 8 or forloop.counter == 10 %}
+                                                        </tr>
+                                                        <tr>
+                                                     {% endif %}
+                                                {% endfor %}
+                                            </tr>
+                                            {% else %}
+                                            <p class="text-danger">No data found</p>
+                                            {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+    
+                </div>
+
+            <div class="row">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <i class="fa fa-bar-chart-o fa-fw"></i> Backtest Result
+                            <div class="pull-right">
+                                <button type="button" class="btn btn-default btn-xs " data-toggle="modal" data-target="#backtestchartExplanation"><i class="fa fa-question-circle" aria-hidden="true"></i> About</button>
+                            </div>
+                        </div>                                
+                        <div class="embed-responsive embed-responsive-4by3 bg-white c-bg col-xs-12 col-sm-12 col-md-12 col-lg-12 nopadding">
+                            <iframe frameborder='0' scrolling='no' src='{% static 'interface/plotly.html' %}' class="embed-responsive-item" style="border:none;" ></iframe>
+                        </div>
+
+
+                        <!-- <div class="panel-body">
+                            <div id="backTestChart" class="bg-white c-bg col-xs-12 col-sm-12 col-md-12 col-lg-12 nopadding" style="height: 500px;">			  
+                            </div>
+                        </div> -->
+                        
+
+                    </div>
+                    <!-- /.panel -->           
+            </div>
+            
+            
+            
+            <div class="row">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Coinwise Performance
+                        <div class="pull-right">
+                            <button type="button" class="btn btn-default btn-xs " data-toggle="modal" data-target="#riskmetricsExplanation"><i class="fa fa-question-circle" aria-hidden="true"></i> About</button>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="col-lg-12 nopadding">
+                            <!-- Nav tabs -->
+                            <ul class="nav nav-tabs">
+                                {% if coinwise_stats %}
+                                    {% for key, value in coinwise_stats.items%}
+                                        <li class="active"><a href="#{{ key }}" data-toggle="tab" aria-expanded="true">{{ key }}</a>
+                                        </li>
+                                    {% endfor %}
+                                {% endif %}
+                            </ul>
+
+                            <!-- Tab panes -->
+                                
+                            {% for key, coinwise in coinwise_stats.items%}
+
+                                <div class="tab-pane fade" id="{{key}}">
+                                    <div class="table-responsive padding-10px">
+                                        <table class="table table-bordered">
+                                            <tbody>
+                                            {% if coinwise %}
+                                            <tr>
+                                                {% for key, value in coinwise.items%} 											
+                                                        
+                                                            <td style="background-color:#f9f9f9;">{{ key }}</td>
+                                                            <td>{{ value }}</td>
+                                                        
+
+                                                        {% if forloop.counter == 2 or forloop.counter == 4 or forloop.counter == 6 or forloop.counter == 8 or forloop.counter == 10 %}
+                                                        </tr>
+                                                        <tr>
+                                                        {% endif %}
+                                                {% endfor %}
+                                            </tr>
+                                            {% else %}
+                                            <p class="text-danger">No data found</p>
+                                            {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                            {% endfor %}
+
+
+                                
+
+                                <!-- /.end tab -->
+                            </div>
+                        </div>									
+                    </div>								
+            </div>
+        </div>
+            <!-- /.panel-body -->
+
+    </div>
+    <!-- /#page-wrapper -->
+
+	
+
+
+	
+				
+
+				
+
+    <!-- jQuery -->
+    <!-- Bootstrap Core JavaScript -->
+    <script src="{% static 'interface/vendor/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'interface/vendor/bootstrap/js/bootstrap.min.js' %}"></script>
+
+    <!-- Metis Menu Plugin JavaScript -->
+    <script src="{% static 'interface/vendor/metisMenu/metisMenu.min.js' %}"></script>
+
+    <!-- Custom Theme JavaScript -->
+    <script src="{% static 'interface/dist/js/sb-admin-2.js' %}"></script>
+	
+
+</body>
+
+</html>
