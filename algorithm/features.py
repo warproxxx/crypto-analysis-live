@@ -95,7 +95,7 @@ def get_features(tweet_df, price_df, coin_name, curr_start, curr_end, minutes=30
     
     tweet_df = tweet_df.merge(userwise_inf[['username', 'avg_influence', 'total_influence']], left_on='User', right_on='username', how='left')
     tweet_df['avg_influence'] = tweet_df['avg_influence'].fillna(2) #half the average if that user does not exist. This number goes down as our dataset goes up
-    tweet_df['total_influence'] = tweet_df['avg_influence'].fillna(6) #half the average for same reason
+    tweet_df['total_influence'] = tweet_df['total_influence'].fillna(6) #half the average for same reason
 
     price_df = price_df[(price_df['Time'] >= curr_start) & (price_df['Time'] <= curr_end)].reset_index(drop=True)
     features = tweet_df.groupby('Time').apply(tweets_to_features)
@@ -336,11 +336,50 @@ class tradeStrategy(bt.Strategy):
                     self.log("HODL {}".format(self.dataopen[0]))
 
 
-def perform_backtest(symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par, long_per_threshold_par, long_close_threshold_par, short_macd_threshold_par, short_per_threshold_par, short_close_threshold_par, initial_cash=10000, comission=0.1):
-    #start only once number of tweets is greater than 0
-    #still shorts at first. That is wrong
-     
-    #make these variables global
+def perform_backtest(symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par, long_per_threshold_par, long_close_threshold_par, 
+                    short_macd_threshold_par, short_per_threshold_par, short_close_threshold_par, initial_cash=10000, comission=0.1, df=None):
+    '''
+    Parameter:
+    __________
+
+    symbol_par (string):
+    The symbol to use
+
+    n_fast_par (int):
+    Fast EMA line used during MACD calculation
+
+    n_slow_par (int):
+    Slower EMA line used during MACD calculation
+
+    long_macd_threshold_par (int):
+    The threshold of normalized macd, above which we might open a long position
+
+    long_per_threshold_par (int):
+    The value of percentage change over the last 2 hours above which we might open a long position
+    #Might make this a parameter too
+
+    long_close_threshold_par (int):
+    Threshold of normalized macd, below which we will close the opened long position
+
+    short_macd_threshold_par (int):
+    The threshold of normalized macd, below which we might open a short position
+
+    short_per_threshold_par (int):
+    The value of percentage change over the last 2 hours below which we might open a short position
+
+    short_close_threshold_par (int):
+    Threshold of normalized macd, above which we will close the opened short position
+
+    initial_cash (int) (optional):
+    The cash to start from. Initiall 10k
+
+    comission (int) (option):
+    int fraction value. Defaults to 0.1%. This is much higher than normal. Staying on the safe side.
+
+    df (Dataframe) (option):
+    Uses df as features dataframe if specified. Otherwise reads the coin folder
+    
+    '''
     global n_fast
     global n_slow
 
@@ -365,7 +404,8 @@ def perform_backtest(symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par
 
     features_file = get_root_dir() + "/data/features/{}.csv".format(symbol)
 
-    df = pd.read_csv(features_file)
+    if df is None:
+        df = pd.read_csv(features_file)
 
     df['macd'] = ta.trend.macd(df['sentistrength_total'], n_fast=n_fast, n_slow=n_slow, fillna=True)
     df['macd'] = df['macd'].fillna(0)

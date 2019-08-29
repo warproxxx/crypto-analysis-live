@@ -104,8 +104,6 @@ while True:
     user_info.to_csv(profilefile, index=None)
 
     df = df.sort_values('Time')
-    curr_start = df.iloc[0]['Time']
-    curr_end = df.iloc[-1]['Time']
     df.groupby('keyword').apply(save_to_file)
 
     curr_start = df.iloc[0]['Time']
@@ -122,6 +120,13 @@ while True:
     for idx, row in keywords.iterrows():
         tweet_df = pd.read_csv(dir + '/data/coinwise/{}.csv'.format(row['Symbol']))
         price_df = get_price(row['Symbol'])
+
+
+        tweet_df = tweet_df.sort_values('Time')
+        tweet_df = tweet_df.set_index('Time')
+        tweet_df.index = tweet_df.index.ceil(freq='30Min')  
+        tweet_df = tweet_df.reset_index()
+
         features = get_features(tweet_df, price_df, row['Symbol'], curr_start, curr_end)
 
         # if currentTime.minute % 30 != 0:
