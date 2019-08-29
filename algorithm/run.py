@@ -59,67 +59,66 @@ while True:
 # else:
     # time.sleep(10)
     keywords = pd.read_csv(get_root_dir() + '/keywords.csv')
-    print('read keywords')
+    # print('read keywords')
     
-    files = glob(os.path.join(dir, 'data/twitter_stream/*'))
+    # files = glob(os.path.join(dir, 'data/twitter_stream/*'))
     
-    #copy these files into a folder so they can be processed independently
-    for idx, file in enumerate(files):
-        old_name = os.path.join(dir, files[idx])
-        files[idx] = os.path.join(dir, files[idx].replace('twitter_stream/', 'temp/'))
-        shutil.move(old_name, files[idx])
-        print('moving {}'.format(file))
+    # #copy these files into a folder so they can be processed independently
+    # for idx, file in enumerate(files):
+    #     old_name = os.path.join(dir, files[idx])
+    #     files[idx] = os.path.join(dir, files[idx].replace('twitter_stream/', 'temp/'))
+    #     shutil.move(old_name, files[idx])
+    #     print('moving {}'.format(file))
 
-    print(files)
-    combined = merge_csvs(files)
-    print('merged')
-    df = pd.read_csv(combined)
-    df, user_info = processor(df)
-    print('first processed')
-    savefile = os.path.join(dir, 'data/all_cleaned.csv')
-    profilefile = os.path.join(dir, 'data/cleaned_profile.csv')
+    # print(files)
+    # combined = merge_csvs(files)
+    # print('merged')
+    # df = pd.read_csv(combined)
+    # df, user_info = processor(df)
+    # print('first processed')
+    # savefile = os.path.join(dir, 'data/all_cleaned.csv')
+    # profilefile = os.path.join(dir, 'data/cleaned_profile.csv')
 
-    for file in files:
-        os.remove(file)
+    # for file in files:
+    #     os.remove(file)
 
-    print("getting sentiment and all")
-    df = clean_further(df)
+    # print("getting sentiment and all")
+    # df = clean_further(df)
 
-    df['ID'] = df['ID'].astype(int)
-    df['Time'] = pd.to_datetime(df['Time'], unit='s')
+    # df['ID'] = df['ID'].astype(int)
+    # df['Time'] = pd.to_datetime(df['Time'], unit='s')
 
-    df = add_keyword(df)
-    df = df[df['keyword'] != 'invalid'] #moving the order for faster testing
-    df = get_sentiment(df)
+    # df = add_keyword(df)
+    # df = df[df['keyword'] != 'invalid'] #moving the order for faster testing
+    # df = get_sentiment(df)
 
-    df.to_csv(savefile, index=None)
-    # if not os.path.isfile(savefile):
-    #     df.to_csv(savefile, index=None)
-    # else:
-    #     df.to_csv(savefile, index=None, mode='a')
+    # df.to_csv(savefile, index=None)
+    # # if not os.path.isfile(savefile):
+    # #     df.to_csv(savefile, index=None)
+    # # else:
+    # #     df.to_csv(savefile, index=None, mode='a')
 
-    if os.path.isfile(profilefile):
-        user_info = pd.concat([user_info, pd.read_csv(profilefile)])
-        user_info = clean_profile(user_info)
+    # if os.path.isfile(profilefile):
+    #     user_info = pd.concat([user_info, pd.read_csv(profilefile)])
+    #     user_info = clean_profile(user_info)
 
-    user_info.to_csv(profilefile, index=None)
+    # user_info.to_csv(profilefile, index=None)
 
     
-    df.groupby('keyword').apply(save_to_file)
+    # df.groupby('keyword').apply(save_to_file)
 
-    storage_dir = os.path.join(dir, 'data/storage')
+    # storage_dir = os.path.join(dir, 'data/storage')
 
-    if not os.path.isdir(storage_dir):
-        os.makedirs(storage_dir)
+    # if not os.path.isdir(storage_dir):
+    #     os.makedirs(storage_dir)
 
-    storagename = os.path.join(storage_dir, 'all_cleaned_{}.csv'.format(int(time.time())))
-    shutil.move(savefile, storagename)
+    # storagename = os.path.join(storage_dir, 'all_cleaned_{}.csv'.format(int(time.time())))
+    # shutil.move(savefile, storagename)
     
     for idx, row in keywords.iterrows():
         print(row['Symbol'])
-        features = get_features(row['Symbol'])
-        
+        # features = get_features(row['Symbol'])        
         # if currentTime.minute % 30 != 0:
-        perform_backtest(features, row['Symbol'], n_fast_par=24, n_slow_par=52, long_macd_threshold_par=2, long_per_threshold_par=1, 
+        perform_backtest(row['Symbol'], n_fast_par=24, n_slow_par=52, long_macd_threshold_par=2, long_per_threshold_par=1, 
                         long_close_threshold_par=1, short_macd_threshold_par=-1, short_per_threshold_par=0, short_close_threshold_par=0.5,
                         initial_cash=10000, comission=0.1)

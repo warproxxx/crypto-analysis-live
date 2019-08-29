@@ -83,7 +83,7 @@ def get_features(coin_name, duration='30Min', minutes=30):
     tweet_df['Time'] = pd.to_datetime(tweet_df['Time'], errors='coerce')
     tweet_df = tweet_df.dropna(subset=['Time'])
 
-    tweet_df = tweet_df.sort_values['Time']
+    tweet_df = tweet_df.sort_values('Time')
     
     tweet_df = tweet_df.merge(userwise_inf[['username', 'avg_influence', 'total_influence']], left_on='User', right_on='username', how='left')
     tweet_df['avg_influence'] = tweet_df['avg_influence'].fillna(2) #half the average if that user does not exist. This number goes down as our dataset goes up
@@ -195,12 +195,12 @@ class PandasData_Custom(bt.feeds.PandasData):
 
 class tradeStrategy(bt.Strategy):
     def __init__(self):
-        global long_macd_threshold, long_per_threshold, long_close_threshold, long_close_threshold, short_per_threshold, short_close_threshold
+        global long_macd_threshold, long_per_threshold, long_close_threshold, short_macd_threshold, short_per_threshold, short_close_threshold
         self.long_macd_threshold = long_macd_threshold
         self.long_per_threshold = long_per_threshold
         self.long_close_threshold = long_close_threshold
         
-        self.short_macd_threshold = long_close_threshold
+        self.short_macd_threshold = short_macd_threshold
         self.short_per_threshold = short_per_threshold
         self.short_close_threshold = short_close_threshold
         
@@ -345,7 +345,10 @@ class tradeStrategy(bt.Strategy):
                     self.log("HODL {}".format(self.dataopen[0]))
 
 
-def perform_backtest(df, symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par, long_per_threshold_par, long_close_threshold_par, short_macd_threshold_par, short_per_threshold_par, short_close_threshold_par, initial_cash=10000, comission=0.1):
+def perform_backtest(symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par, long_per_threshold_par, long_close_threshold_par, short_macd_threshold_par, short_per_threshold_par, short_close_threshold_par, initial_cash=10000, comission=0.1):
+    #start only once number of tweets is greater than 0
+    #still shorts at first. That is wrong
+     
     #make these variables global
     global n_fast
     global n_slow
@@ -373,7 +376,14 @@ def perform_backtest(df, symbol_par, n_fast_par, n_slow_par, long_macd_threshold
 
     df = pd.read_csv(features_file)
 
-    df['macd'] = ta.trend.macd(df['sentistrength_total'], n_fast=n_fast, n_slow=n_slow)
+    df['Time'] = pd.to_datetime(df['Time'])
+    df = df.sort_values('Time')
+    first_time = df[df['number_of_tweets'] > 0].iloc[0]['Time']
+    print(first_time)
+    df = df[df['Time'] > first_time]
+    df = df.reset_index(drop=True)
+
+    df['macd'] = ta.trend.macd(df['sentistrength_total'], n_fast=n_fast, n_slow=n_slow, fillna=True)
     df['macd'] = df['macd'].fillna(0)
     #calculation has repetition. A lot of. Avoid that
 
