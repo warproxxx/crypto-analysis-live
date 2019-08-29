@@ -53,7 +53,7 @@ def clean_profile(user_info):
     user_info['user_created_at'] = pd.to_datetime(user_info['user_created_at'])
     user_info['user_created_at'] = user_info['user_created_at'].astype(np.int64) // 10**9
 
-    user_info = user_info.drop_duplicates(subset='username')
+    user_info = user_info.drop_duplicates(subset='username', keep='last')
 
     return user_info[['username', 'user_created_at', 'total_tweets', 'total_followers', 'total_following', 'total_likes', 'total_lists', 'default_profile', 'has_geolocation', 'has_background', 'is_verified', 'is_protected']]
 
@@ -170,8 +170,8 @@ def get_sentiment(df):
     '''
     root_dir = get_root_dir()
 
-    s = SentimentIntensityAnalyzer()
-    df['vader_emotion'] = df['Tweet'].swifter.apply(lambda x: s.polarity_scores(x)['compound'])
+    # s = SentimentIntensityAnalyzer()
+    # df['vader_emotion'] = df['Tweet'].swifter.apply(lambda x: s.polarity_scores(x)['compound'])
 
     cop = df['Tweet'].copy()
     

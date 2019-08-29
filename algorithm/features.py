@@ -22,7 +22,6 @@ import swifter
 import ta
 import backtrader as bt
 
-from utils.get_price_data import get_price
 from utils.common_utils import get_root_dir
 
 #maybe create a percentage of influential users
@@ -45,26 +44,41 @@ def tweets_to_features(group):
     except:
         features['sentistrength_total'] = 0
         
-    try:
-        features['vader_total'] = sum(group['vader_emotion'] * group['avg_influence'])
-    except:
-        features['vader_total'] = 0
+#     try:
+#         features['vader_total'] = sum(group['vader_emotion'] * group['avg_influence'])
+#     except:
+#         features['vader_total'] = 0
     
     try:
         features['sentistrength_total_mean'] = sum(group['pos_neg'] * group['avg_influence'])/sum(group['avg_influence'])
     except:
         features['sentistrength_total_mean'] = 0
         
-    try:
-        features['vader_total_mean'] = sum(group['vader_emotion'] * group['avg_influence'])/sum(group['avg_influence'])
-    except:
-        features['vader_total_mean'] = 0
+#     try:
+#         features['vader_total_mean'] = sum(group['vader_emotion'] * group['avg_influence'])/sum(group['avg_influence'])
+#     except:
+#         features['vader_total_mean'] = 0
     
     return pd.Series(features)
 
-def get_features(coin_name, duration='30Min', minutes=30):
+def get_features(tweet_df, price_df, coin_name, curr_start, curr_end, minutes=30):
     '''
-    Create features for the given coin. Have file for features. do after the given point only.
+    Parameters:
+    ___________
+    tweet_df (DataFrame):
+    Dataframe of tweets for the current coin
+    
+    price_df (DataFrame):
+    Dataframe of price of the current coin
+    
+    coin_name (string):
+    Name of coin
+    
+    curr_start (Timestamp):
+    Starting time of the current all_cleaned
+    
+    curr_end (Timestamp):
+    Ending time of the current all_cleaned
     '''
     features_dir = get_root_dir() + "/data/features"
 
@@ -72,44 +86,21 @@ def get_features(coin_name, duration='30Min', minutes=30):
         os.makedirs(features_dir)
     
     features_file = features_dir + '/{}.csv'.format(coin_name)
-    tweet_file = 'data/coinwise/{}.csv'.format(coin_name)
-
+    
     userwise_inf_file = os.path.join(get_root_dir(), 'data/userwise_influence.csv')
     userwise_inf = pd.read_csv(userwise_inf_file)
-    
-    price_df = get_price(coin_name, duration)
-    tweet_df = pd.read_csv(tweet_file)
-    
-    tweet_df['Time'] = pd.to_datetime(tweet_df['Time'], errors='coerce')
-    tweet_df = tweet_df.dropna(subset=['Time'])
 
+    tweet_df['Time'] = pd.to_datetime(tweet_df['Time'])
     tweet_df = tweet_df.sort_values('Time')
     
     tweet_df = tweet_df.merge(userwise_inf[['username', 'avg_influence', 'total_influence']], left_on='User', right_on='username', how='left')
     tweet_df['avg_influence'] = tweet_df['avg_influence'].fillna(2) #half the average if that user does not exist. This number goes down as our dataset goes up
     tweet_df['total_influence'] = tweet_df['avg_influence'].fillna(6) #half the average for same reason
 
-    new_df = pd.DataFrame()
-    new_df['time'] = price_df.index
-
-    new_df = new_df[new_df['time'] > tweet_df.iloc[0]['Time']] #only after the first
-
-    tweet_df = tweet_df.rename(columns={'Time': 'time'})
-    tweet_df = tweet_df.sort_values('time')
-    new_df['time_group'] = new_df['time']
-
-
-    tweet_df = pd.merge_asof(tweet_df, new_df, on='time', direction='nearest')
-    
-    tweet_df = tweet_df[((tweet_df['time_group'] - tweet_df['time']).astype(int) // 10 ** 9).abs() < (minutes*60)]
-
-    features = tweet_df.groupby('time_group').apply(tweets_to_features)
-    features = features.reset_index().rename(columns={'time_group': 'Time'}).set_index('Time')
-    features = features.join(price_df, how='outer')
-    features = features.reset_index()
+    price_df = price_df[(price_df['Time'] >= curr_start) & (price_df['Time'] <= curr_end)].reset_index(drop=True)
+    features = tweet_df.groupby('Time').apply(tweets_to_features)
+    features = price_df.merge(features, how='left', on='Time')
     features = features.fillna(0)
-
-    os.remove(tweet_file)
 
     if os.path.isfile(features_file):
         old_features = pd.read_csv(features_file)
@@ -118,7 +109,7 @@ def get_features(coin_name, duration='30Min', minutes=30):
         features = features.sort_values('Time')
         features = features.drop_duplicates('Time',keep='last')
 
-    features.to_csv(features_file)
+    features.to_csv(features_file, index=None)
 
     return features
     
@@ -200,7 +191,7 @@ class tradeStrategy(bt.Strategy):
         self.long_per_threshold = long_per_threshold
         self.long_close_threshold = long_close_threshold
         
-        self.short_macd_threshold = short_macd_threshold
+        self.short_macd_threshold = short_macd_threshold #was a mistake on grid search run it again with better parameters now i know what works
         self.short_per_threshold = short_per_threshold
         self.short_close_threshold = short_close_threshold
         
@@ -375,13 +366,6 @@ def perform_backtest(symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par
     features_file = get_root_dir() + "/data/features/{}.csv".format(symbol)
 
     df = pd.read_csv(features_file)
-
-    df['Time'] = pd.to_datetime(df['Time'])
-    df = df.sort_values('Time')
-    first_time = df[df['number_of_tweets'] > 0].iloc[0]['Time']
-    print(first_time)
-    df = df[df['Time'] > first_time]
-    df = df.reset_index(drop=True)
 
     df['macd'] = ta.trend.macd(df['sentistrength_total'], n_fast=n_fast, n_slow=n_slow, fillna=True)
     df['macd'] = df['macd'].fillna(0)

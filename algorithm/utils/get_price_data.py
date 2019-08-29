@@ -12,6 +12,10 @@ def merge_time(df):
     return pd.Series(ret)
 
 def get_price(symbol, duration='30Min'):
+    '''
+    If curr_start and curr_end is set to None, returns all, else return for given time.
+    '''
+
     dir = get_root_dir()
 
     fname = dir + "/data/price/{}.csv".format(symbol)
@@ -23,5 +27,6 @@ def get_price(symbol, duration='30Min'):
     df = pd.read_csv(fname)
     df['Time'] = pd.to_datetime(df['Time'])
 
-    price_df = df.groupby(pd.Grouper(key='Time', freq=duration)).apply(merge_time)
+    price_df = df.groupby(pd.Grouper(key='Time', freq=duration, label='right')).apply(merge_time)
+    price_df = price_df.reset_index()
     return price_df
