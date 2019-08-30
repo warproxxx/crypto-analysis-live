@@ -22,7 +22,6 @@ def merge_csvs(files, ignore_name=None):
     '''
     combined = BytesIO()
     first = 1
-    all_dates = []
 
     if ignore_name != None:
         ignored_files = [file for file in files if ignore_name not in file] 
@@ -31,7 +30,6 @@ def merge_csvs(files, ignore_name=None):
 
     if len(ignored_files) >= 1:
         for file in ignored_files:
-            all_dates.extend(os.path.splitext(os.path.basename(file))[0].split("_"))
 
             with open(file, "rb") as f:
                 if (first != 1):
@@ -41,9 +39,7 @@ def merge_csvs(files, ignore_name=None):
                 
                 combined.write(f.read())
 
-        combined.seek(0)
-        all_dates = sorted(all_dates, key=lambda d: tuple(map(int, d.split('-'))))
-        
+        combined.seek(0)        
         return combined
     else:
         return None

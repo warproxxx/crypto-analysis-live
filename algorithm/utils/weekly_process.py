@@ -8,6 +8,7 @@ import swifter
 import shutil
 
 import tweepy
+from ttp import ttp
 
 import time
 import datetime
@@ -29,7 +30,7 @@ def get_influence(df):
     return df
 
 def get_file_name():
-    fname = get_root_dir() + '/algorithm/data/temp/rescraped.csv'
+    fname = get_root_dir() + '/data/temp/rescraped.csv'
 
     if os.path.isfile(fname):
         pass
@@ -46,7 +47,6 @@ def get_file_name():
     
     return fname
 
-# function for adding data to csv file
 def write_csv(row_data):
     filename = get_file_name()
 
@@ -54,8 +54,10 @@ def write_csv(row_data):
         writer = csv.writer(csvfile, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(row_data)
 
-def make_tweets(find_id):
+def make_tweets(find_id, original):
+    #fix this error
     found = original[original['in_response_to_id'] == find_id]
+    p = ttp.Parser()
     parsed = p.parse(found.iloc[0]['Tweet'])
     
     current_tweet = {}
@@ -79,11 +81,11 @@ def rescrape_and_add(original, to_scrape):
     auth.set_access_token(access_key, access_secret)
     api = tweepy.API(auth)
 
-    print("Rescraping {} tweets".format(to_scrape))
+    print("Rescraping {} tweets".format(len(to_scrape)))
     for i in range(100, len(to_scrape)+100, 100):
         print("{} {}".format(i-100, i))
         
-        tweets = api.statuses_lookup(to_scrape['index'][i-100:i].values,tweet_mode='extended')
+        tweets = api.statuses_lookup(list(to_scrape['index'][i-100:i].values),tweet_mode='extended')
         
         for tweet in     tweets:
             response_type = 'tweet'
@@ -159,8 +161,7 @@ def rescrape_and_add(original, to_scrape):
     rescraped_df, rescraped_profile = processor(rescraped)
     non_existing = to_scrape[~to_scrape['index'].isin(rescraped['id'])]
 
-    p = ttp.Parser()
-    virtual_tweets = non_existing['index'].apply(make_tweets)
+    virtual_tweets = non_existing['index'].apply(make_tweets, original=original)
     rescraped = pd.concat([virtual_tweets, rescraped_df]).reset_index(drop=True)
     virtual_tweets['User'] = virtual_tweets['User'].str.lower()
     rescrape = virtual_tweets[~virtual_tweets['User'].isin(profile['username'])]
@@ -178,11 +179,10 @@ def rescrape_and_add(original, to_scrape):
 
     return new_df, new_profile
 
-# Every week, after all clean, leave the cascade of the last 2 days and join 5 days (leaving the 2 days) to update influence and all. Our influence file will probably be renamed
-# to include the date. This strategy has flaws of missed tweet too. But that is good enough for now
+# Leaves the old cascade file and substract to create
 
 dir = get_root_dir()
-storagefolder = os.path.join(dir, 'data/storage')
+storagefolder = os.path.join(dir, 'data/storage/all_cleaned')
 
 storagesfiles = glob(storagefolder + "/*")
 combined = merge_csvs(storagesfiles)
@@ -203,25 +203,73 @@ df = df.rename(columns={'Time': 'time', 'total_followers': 'magnitude', 'User': 
 counts = df['cascade'].value_counts().reset_index()
 
 df = df[df['cascade'].isin(counts[counts['cascade'] > 2]['index'])]
-oldcascade_file = storagefolder + "/old_cascade.csv"
+oldcascade_file = os.path.join(dir, 'data/storage/old_cascade.csv')
 df = df[['ID', 'time', 'magnitude', 'user_id', 'cascade']]
 
-#This mechanism still has repetition and needs to be fixed
 if os.path.isfile(oldcascade_file):
     old_file = pd.read_csv(oldcascade_file)
-    oldcascade_file = oldcascade_file[oldcascade_file['cascade'].isin(df['cascade'])]
+    old_file = old_file[old_file['cascade'].isin(df['cascade'])]
     df.to_csv(oldcascade_file, index=None)
 
-    df = pd.concat([df, oldcascade_file])
+    df = pd.concat([df, old_file])
     df = df.reset_index()
 else:
     df.to_csv(oldcascade_file, index=None)
 
-d = df.groupby('cascade').apply(get_influence)
-d = d.drop_duplicates()
-df = df.merge(d, on='ID')
-df = df.drop('cascade_y', axis=1).rename(columns={'cascade_x':'cascade'})
+def get_influence(df):
+    df = df.reset_index(drop=True)
 
-#update the influence file
-curr_inf = pd.read_csv(os.path.join(dir, 'data/userwise_influence.csv')) #save code probably needs to moved down here
-#work on the interface for now. Still lot to do here as seen in http://localhost:8888/notebooks/crypto-analysis/meta_analyse/data_analysis/2)%20Influence%20Calculation.ipynb
+    p_ij = P(df,r = -0.000068)
+    inf, m_ij = influence(p_ij)
+    df['inf'] = inf
+    df = df[['ID', 'inf', 'cascade']]
+    return df
+
+def get_influence_metrics(df):
+    curr = {}
+    curr['total_tweets'] = len(df)
+    curr['total_influence'] = df['inf'].sum()
+    curr['avg_influence'] = curr['total_tweets'] / curr['total_influence']
+             
+    return pd.Series(curr)
+
+def add_influence_and_all(df):
+    d = df.groupby('cascade').apply(get_influence)
+    d = d.drop_duplicates()
+    df = df.merge(d, on='ID')
+    df = df.drop('cascade_y', axis=1).rename(columns={'cascade_x':'cascade'})
+    new_inf = df.groupby('user_id').apply(get_influence_metrics)
+
+    new_inf = new_inf.reset_index().rename(columns={'user_id': 'username'})
+    return new_inf
+
+def add_inf(curr_inf, new_inf):
+    combined = new_inf.merge(curr_inf, how='outer', on='username')
+    combined = combined.fillna(0)
+    combined['total_tweets'] = combined['total_tweets_x'] + combined['total_tweets_y']
+    combined['total_influence'] = combined['total_influence_x'] + combined['total_influence_y']
+    combined = combined[['username', 'total_tweets', 'total_influence']]
+    combined['avg_influence'] = combined['total_influence']/combined['total_tweets']
+    combined.sort_values('total_influence', ascending=False)
+    
+    return combined
+
+def sub_inf(combined_inf, to_remove):
+    combined = combined_inf.merge(to_remove, how='outer', on='username')
+    combined = combined.fillna(0)
+    combined['total_tweets'] = combined['total_tweets_x'] - combined['total_tweets_y']
+    combined['total_influence'] = combined['total_influence_x'] - combined['total_influence_y']
+    combined = combined[['username', 'total_tweets', 'total_influence']]
+    combined['avg_influence'] = combined['total_influence']/combined['total_tweets']
+    combined.sort_values('total_influence', ascending=False)
+    
+    return combined
+
+new_inf = add_influence_and_all(df)
+curr_inf = pd.read_csv(os.path.join(dir, 'data/userwise_influence.csv'))
+combined_inf = add_inf(curr_inf, new_inf)
+if 'old_file' in locals():
+    to_remove = add_influence_and_all(old_file.drop('inf', axis=1))
+    combined_inf = sub_inf(combined_inf, to_remove)
+
+combined_inf.to_csv(os.path.join(dir, 'data/userwise_influence.csv'), index=None)

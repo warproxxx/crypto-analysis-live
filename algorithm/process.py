@@ -11,14 +11,20 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from subprocess import Popen
 
 def clean_further(df):
-    '''
-    Final Cleaning step to drop non numeric
-    '''
     df = df[pd.to_numeric(df['ID'], errors='coerce').notnull()]
     df = df[pd.to_numeric(df['in_response_to_id'], errors='coerce').notnull()]
     df['ID'] = df['ID'].astype(int)
     df['in_response_to_id'] = df['in_response_to_id'].astype(int)
     df = df.drop_duplicates(subset=['ID'])
+
+    if len(str(df['Time'].iloc[0])) < 18:
+        df = df[pd.to_datetime(df['Time'], unit='s', errors='coerce').notnull()]
+        df['Time'] = pd.to_datetime(df['Time'], unit='s')
+    else:
+        df = df[pd.to_datetime(df['Time'], errors='coerce').notnull()]
+        df['Time'] = pd.to_datetime(df['Time'])
+
+    
     return df
 
 def create_cascades(df):
@@ -188,8 +194,13 @@ def get_sentiment(df):
 
     tempFolder = os.path.join(root_dir, "data/temp")
     tempFile = os.path.join(tempFolder, "tweets")
+    outputFile = os.path.join(tempFolder, "tweets0_out.txt")
+
     cop.to_csv(tempFile, index=None, header=None)
 
+
+    if os.path.isfile(outputFile):
+        os.remove(outputFile)
 
     sentiFolder = os.path.join(root_dir, "utils")
     
@@ -203,7 +214,7 @@ def get_sentiment(df):
     os.remove(tempFile)
 
 
-    outputFile = os.path.join(tempFolder, "tweets0_out.txt")
+    
     aa = pd.read_csv(outputFile, sep="\t")
     df = df.join(aa[['Positive', 'Negative']])
     os.remove(outputFile)

@@ -46,9 +46,9 @@ def save_to_file(df):
         os.makedirs(coinwise_folder)
 
     savefile = "{}/{}.csv".format(coinwise_folder, keyword)
-
     df.to_csv(savefile, index=None)
 
+#place all cleaned files in storage inside all_cleaned folder
 while True:
     # currentTime = datetime.datetime.now(datetime.timezone.utc)
 
@@ -59,66 +59,79 @@ while True:
     keywords = pd.read_csv(get_root_dir() + '/keywords.csv')
     print('read keywords')
     
-    files = glob(os.path.join(dir, 'data/twitter_stream/*'))
-    
-    #copy these files into a folder so they can be processed independently
-    for idx, file in enumerate(files):
-        old_name = os.path.join(dir, files[idx])
-        files[idx] = os.path.join(dir, files[idx].replace('twitter_stream/', 'temp/'))
-        shutil.move(old_name, files[idx])
-        print('moving {}'.format(file))
+    try:
+        files = glob(os.path.join(dir, 'data/twitter_stream/*'))
+        
+        #copy these files into a folder so they can be processed independently
+        for idx, file in enumerate(files):
+            old_name = os.path.join(dir, files[idx])
+            files[idx] = os.path.join(dir, files[idx].replace('twitter_stream/', 'temp/'))
+            shutil.move(old_name, files[idx])
+            print('moving {}'.format(file))
 
-    print(files)
-    combined = merge_csvs(files)
-    print('merged')
-    df = pd.read_csv(combined)
-    df, user_info = processor(df)
-    print('first processed')
-    savefile = os.path.join(dir, 'data/all_cleaned.csv')
-    profilefile = os.path.join(dir, 'data/cleaned_profile.csv')
+        print(files)
+        combined = merge_csvs(files)
+        print('merged')
+        df = pd.read_csv(combined)
+        df, user_info = processor(df)
+        print('first processed')
+        savefile = os.path.join(dir, 'data/all_cleaned.csv')
+        profilefile = os.path.join(dir, 'data/cleaned_profile.csv')
 
-    for file in files:
-        os.remove(file)
+        for file in files:
+            os.remove(file)
 
-    print("getting sentiment and all")
-    df = clean_further(df)
+        print("getting sentiment and all")
 
-    df['ID'] = df['ID'].astype(int)
-    df['Time'] = pd.to_datetime(df['Time'], unit='s')
+        df['ID'] = df['ID'].astype(int)
 
-    df = add_keyword(df)
-    df = df[df['keyword'] != 'invalid'] #moving the order for faster testing
-    df = df.reset_index(drop=True)
-    df = get_sentiment(df)
+        df = add_keyword(df)
+        df = df[df['keyword'] != 'invalid'] #moving the order for faster testing
+        df = df.reset_index(drop=True)
+        df = get_sentiment(df)
 
-    df.to_csv(savefile, index=None)
-    # if not os.path.isfile(savefile):
-    #     df.to_csv(savefile, index=None)
-    # else:
-    #     df.to_csv(savefile, index=None, mode='a')
+        df.to_csv(savefile, index=None)
 
-    if os.path.isfile(profilefile):
-        user_info = pd.concat([user_info, pd.read_csv(profilefile)])
-        user_info = clean_profile(user_info)
+        df = pd.read_csv(savefile)
+        df = clean_further(df)
 
-    user_info.to_csv(profilefile, index=None)
+        df.to_csv(savefile, index=None)
 
-    df = df.sort_values('Time')
-    df.groupby('keyword').apply(save_to_file)
+        if os.path.isfile(profilefile):
+            user_info = pd.concat([user_info, pd.read_csv(profilefile)])
+            user_info = clean_profile(user_info)
 
-    curr_start = df.iloc[0]['Time']
-    curr_end = df.iloc[-1]['Time']
+        user_info.to_csv(profilefile, index=None)
 
-    storage_dir = os.path.join(dir, 'data/storage')
+        df = df.sort_values('Time')
+        df.groupby('keyword').apply(save_to_file)
 
-    if not os.path.isdir(storage_dir):
-        os.makedirs(storage_dir)
+        curr_start = df.iloc[0]['Time']
+        curr_end = df.iloc[-1]['Time']
 
-    storagename = os.path.join(storage_dir, 'all_cleaned_{}.csv'.format(int(time.time())))
-    shutil.move(savefile, storagename)
+        storage_dir = os.path.join(dir, 'data/storage/all_cleaned/')
+
+        if not os.path.isdir(storage_dir):
+            os.makedirs(storage_dir)
+
+        storagename = os.path.join(storage_dir, 'all_cleaned_{}.csv'.format(int(time.time())))
+        shutil.move(savefile, storagename)
+    except Exception as e: #this is temporary. If no file go here
+        print("Error in the early stages: {}".format(str(e)))
+        storagefiles = list(glob(dir + '/data/storage/all_cleaned/*'))
+
+        storagefiles.sort()
+
+        df = pd.read_csv(storagefiles[-1])
+        df['Time'] = pd.to_datetime(df['Time'])
+        curr_start = df.iloc[0]['Time']
+        curr_end = df.iloc[-1]['Time']
     
     for idx, row in keywords.iterrows():
+        print(row['Symbol'])
         tweet_df = pd.read_csv(dir + '/data/coinwise/{}.csv'.format(row['Symbol']))
+        tweet_df['Time'] = pd.to_datetime(tweet_df['Time'])
+
         price_df = get_price(row['Symbol'])
 
 
