@@ -25,15 +25,6 @@ from utils.twitter_authentication import *
 from utils.profilescraper import profileScraper
 from process import create_cascades, processor, process_scraped_profile, get_sentiment
 
-def get_influence(df):
-    df = df.reset_index(drop=True)
-
-    p_ij = P(df,r = -0.000068)
-    inf, m_ij = influence(p_ij)
-    df['inf'] = inf
-    df = df[['ID', 'inf', 'cascade']]
-    return df
-
 def get_file_name():
     fname = get_root_dir() + '/data/temp/rescraped.csv'
 
@@ -187,10 +178,15 @@ def rescrape_and_add(original, to_scrape):
 def get_influence(df):
     df = df.reset_index(drop=True)
 
-    p_ij = P(df,r = -0.000068)
-    inf, m_ij = influence(p_ij)
-    df['inf'] = inf
-    df = df[['ID', 'inf', 'cascade']]
+    try:
+        p_ij = P(df,r = -0.000068)
+        inf, m_ij = influence(p_ij)
+        df['inf'] = inf
+    except:
+        df['inf'] = 0
+        df = df[0:0]
+
+    df = df[['ID', 'inf']]
     return df
 
 def get_influence_metrics(df):
@@ -204,6 +200,7 @@ def get_influence_metrics(df):
 def add_influence_and_all(df):
     d = df.groupby('cascade').apply(get_influence)
     d = d.drop_duplicates()
+    d = d.reset_index()
     df = df.merge(d, on='ID')
     df = df.drop('cascade_y', axis=1).rename(columns={'cascade_x':'cascade'})
     new_inf = df.groupby('user_id').apply(get_influence_metrics)
@@ -280,4 +277,5 @@ def weekly_process():
 
     combined_inf.to_csv(os.path.join(dir, 'data/userwise_influence.csv'), index=None)
 
-weekly_process()
+if __name__ == "__main__":
+    weekly_process()

@@ -23,6 +23,7 @@
 
   <!-- Custom styles for this template-->
   <link href="{% static 'interface/css/sb-admin.css' %}" rel="stylesheet">
+  <script src="{% static 'interface/js/sort-table.js' %}"></script>
 
 </head>
 
@@ -66,6 +67,7 @@
           
         </ol>
 
+        
         <!-- Summary -->
         <div class="card mb-3">
                 <div class="card-header">
@@ -78,20 +80,102 @@
                           {% if forward_metrics %}
                             {% for key, value in forward_metrics.items%} 											
                             <td style="background-color:#f9f9f9;"><b>{{ key }}:</b></td>
-                            <td>{{ value }} %</td>
+                            <td class="colored">{{ value }}</td>
+
                             {% endfor %}
                           {% else %}
                             <p class="text-danger">No data found</p>
                           {% endif %}
-                      </table>
-                    
-                    <center>Coinwise Statistics - All Time</center>
+                      </table> 
+                    <br/>
+                    <b>Current Long:</b>
+                    <table class="table table-bordered js-sort-table" id="dataTable" width="100%" cellspacing="0">
+                        {% if current_long %}
+                        <thead>
+                          <tr>
+                              {% for header in long_short_headers %}
+                                <th>{{ header }}</th>
+                              {% endfor %}
+                          </tr>
+                        </thead>
+                        <tbody>
+                        {% for list in current_long %} 
+                            <tr>
+                                {% for val in list %}
+                                  <td style="background-color:#008000; color:white;">
+                                      {% if forloop.counter == 1 %}
+                                      <b>{{ val }}</b>
+                                      {% else %}
+                                      {{ val }}
+                                      {% endif %}
+                                    </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                      </tbody>
+
+                        {% else %}
+                        <p class="text-danger">No data found</p>
+                        {% endif %}
+                    </table>
+                    <b>Current Short:</b>
+                    <table class="table table-bordered js-sort-table" id="dataTable" width="100%" cellspacing="0">
+                        {% if current_short %}
+                        <thead>
+                          <tr>
+                              {% for header in long_short_headers %}
+                                <th>{{ header }}</th>
+                              {% endfor %}
+                          </tr>
+                        </thead>
+                        <tbody>
+                        {% for list in current_short %} 
+                            <tr>
+                                {% for val in list %}
+                                <td style="background-color:#FF0000; color:white;">
+                                    {% if forloop.counter == 1 %}
+                                    <b>{{ val }}</b>
+                                    {% else %}
+                                    {{ val }}
+                                    {% endif %}
+                                  </td>
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                      </tbody>
+
+                        {% else %}
+                        <p class="text-danger">No data found</p>
+                        {% endif %}
+                    </table>
+
+
+                    <b>Parameters:</b>
+
+                    <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                        {% if current_parameters %}
+                          {% for key, value in current_parameters.items%} 											
+                          <td style="background-color:#f9f9f9;"><b>{{ key }}:</b></td>
+                          <td>{{ value }}</td>
+
+                          {% if forloop.counter|divisibleby:4 %}
+                          </tr>
+                          <tr>
+                          {% endif %}
+
+                          {% endfor %}
+                        {% else %}
+                          <p class="text-danger">No data found</p>
+                        {% endif %}
+                    </table> 
+
+                    <h3>Coinwise Statistics - All Time</h3>
                                                                 
                     <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                         {% if all_time_coinwise %}
                         {% for key, value in all_time_coinwise.items%} 											
                             <td style="background-color:#f9f9f9;"><b>{{ key }}:</b></td>
-                            <td>{{ value }} %</td>
+                            <td class="colored">{{ value }} %</td>
 
                             {% if forloop.counter|divisibleby:8 %}
                             </tr>
@@ -105,10 +189,50 @@
                         {% endif %}
                     </table>
 
+                    <h3>Features</h3>
+
+                    <table class="table table-bordered js-sort-table" id="dataTable" width="100%" cellspacing="0">
+                        {% if features %}
+                        <thead>
+                          <tr>
+                              {% for header in features_header %}
+                                <th style="padding:0; margin:0;">{{ header }}</th>
+                              {% endfor %}
+                          </tr>
+                        </thead>
+                        <tbody>
+                        {% for list in features %} 
+                            <tr>
+                                {% for val in list %}
+                                  
+
+                                  {% if forloop.counter|divisibleby:2 and forloop.counter|divisibleby:4 == False and forloop.counter|divisibleby:6 == False %}
+                                    <td style="padding:0; margin:0;" class="colored">{{ val }}</td>
+                                  {% else %}
+
+                                    {% if forloop.counter|divisibleby:3 and forloop.counter|divisibleby:6 == False and forloop.counter|divisibleby:9 == False %}
+                                      <td style="padding:0; margin:0;" class="colored">{{ val }}</td>
+                                    {% else %}
+                                      <td style="padding:0; margin:0;">{{ val }}</td>
+                                    {% endif %}
+                                  {% endif %}
+
+                                  
+
+                                {% endfor %}
+                            </tr>
+                        {% endfor %}
+                      </tbody>
+
+                        {% else %}
+                        <p class="text-danger">No data found</p>
+                        {% endif %}
+                    </table>
+
 
                   </div>
                 </div>
-                <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
+                <!-- <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div> -->
         </div>
 
         <!-- Portfolio Movement Plotly Embedding-->
@@ -120,7 +244,7 @@
             <div class="embed-responsive embed-responsive-4by3 bg-white c-bg col-xs-12 col-sm-12 col-md-12 col-lg-12 nopadding" style="max-height: 70vh;">
                     <iframe frameborder='0' scrolling='no' src='{% static 'interface/plotly.html' %}' class="embed-responsive-item" style="border:none;" ></iframe>
             </div>
-            <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>
+            <!-- <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div> -->
         </div>
 
         
@@ -153,6 +277,9 @@
   <script src="{% static 'interface/vendor/chart.js/Chart.min.js' %}"></script>
   <script src="{% static 'interface/vendor/datatables/jquery.dataTables.js' %}"></script>
   <script src="{% static 'interface/vendor/datatables/dataTables.bootstrap4.js' %}"></script>
+  
+  <!-- Custom JavaScript-->
+  <script src="{% static 'interface/js/custom.js' %}"></script>
 
 
 

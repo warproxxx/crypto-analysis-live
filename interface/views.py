@@ -2,13 +2,14 @@ from django.shortcuts import render
 
 import pandas as pd
 import numpy as np
+import json
 
 from glob import glob
 from shutil import copy
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-
+from utils.common_utils import get_root_dir
 
 def get_stats(symbol):
     stats = {}
@@ -23,6 +24,31 @@ def get_stats(symbol):
 
     portfolio = portfolio.rename(columns={'Value': symbol})
     return portfolio[['Date', symbol]], stats
+
+def get_features_stats(symbol):
+    stats = {}
+    
+    curr_folder = "algorithm/data/backtest/{}".format(symbol)
+    
+    features = pd.read_csv(curr_folder + "/data.csv")
+
+    with open(get_root_dir() + "/data/parameters.json") as f:
+        json_info = json.load(f)
+
+    features['Change'] = ((features['Open'] / features.shift(4)['Open']) - 1) * 100
+    features['Change'] = features['Change'].fillna(0)
+    
+    stats['MACD Long Fulfilled'] = len(features[features['macd'] > json_info['long_macd_threshold']])
+    stats['Long Change Fulfilled'] = len(features[features['Change'] > json_info['long_per_threshold']])
+    stats['Long All Fulfilled'] = len(features[(features['macd'] > json_info['long_macd_threshold']) & (features['Change'] > json_info['long_per_threshold'])])
+    stats['MACD Short Fulfilled'] = len(features[features['macd'] < json_info['short_macd_threshold']])
+    stats['Short Change Fulfilled'] = len(features[features['Change'] < json_info['short_per_threshold']])
+    stats['Short All Fulfilled'] = len(features[(features['macd'] < json_info['short_macd_threshold']) & (features['Change'] < json_info['short_per_threshold'])])
+    
+    stats['Current Change'] = features.iloc[-1]['Change']
+    stats['Current MACD'] = features.iloc[-1]['macd']
+    
+    return stats
 
 def get_symbols():
     files = glob('algorithm/data/backtest/*')
@@ -124,18 +150,49 @@ def index(request):
 
     top_ten = ['TRX', 'OMG', 'MIOTA', 'ZEC', 'LTC', 'ETC', 'XTZ', 'BSV', 'SAN']
 
-    forward_metrics = {}
-    forward_metrics['Total Return'] = round((sum(df['end_cash'])/sum(df['start_cash'])  - 1) * 100, 2)
-    forward_metrics['Return VS hodl all coins'] = round((sum(df['end_cash'])/sum(df['end_hodl'])  - 1) * 100, 2) #I think hodl return is WRONG because our features file starts way earlier    
-    
+    btc['Date'] = pd.to_datetime(btc['Date'])
     top_df = df.loc[top_ten]
-    forward_metrics['Total Return - Predetermined Coins'] = round((sum(top_df['end_cash'])/sum(top_df['start_cash'])  - 1) * 100, 2)
 
+    forward_metrics = {}
+    forward_metrics['Started From'] = btc.iloc[0]['Date'].strftime('%Y-%m-%d')
+    forward_metrics['Traded for'] = str((btc.iloc[-1]['Date'] - btc.iloc[0]['Date']).days) + ' days'
+    forward_metrics['Total Return'] = str(round((sum(df['end_cash'])/sum(df['start_cash'])  - 1) * 100, 2)) + " %"
+    forward_metrics['Total Return - Predetermined Coins'] = str(round((sum(top_df['end_cash'])/sum(top_df['start_cash'])  - 1) * 100, 2))  + " %"
+    forward_metrics['Return VS hodl all coins'] = str(round((sum(df['end_cash'])/sum(df['end_hodl'])  - 1) * 100, 2))  + " %"   
+    
     # forward_metrics['Bitcoin hodl VS Portfolio'] = dictionary['btc_portfolio'] 
     del dictionary['btc_portfolio']
 
     symbols = get_symbols()
 
-    #Now last n days, days started to trade from and most active coins 
+    #Features info calculation
+    files = glob('algorithm/data/backtest/*')
+    features_df = pd.DataFrame()
 
-    return render(request, "interface/index.html", {'forward_metrics': forward_metrics, 'all_time_coinwise': dictionary, 'symbols': symbols})
+
+    for file in files:
+        symbol = file.split('/')[-1].replace('.csv', '')
+        curr_features = get_features_stats(symbol)
+        curr_features['Symbol'] = symbol
+        features_df = features_df.append(pd.Series(curr_features), ignore_index=True)
+
+    with open(get_root_dir() + "/data/parameters.json") as f:
+        json_info = json.load(f)
+
+    features_df = features_df[['Symbol'] + list(features_df.columns[:-1])]
+
+    features_df = features_df.sort_values('Current MACD').reset_index(drop=True)
+    features_df = features_df.round(2)
+
+    current_long = features_df[(features_df['Current MACD'] > json_info['long_macd_threshold']) & (features_df['Current Change'] < json_info['long_per_threshold'])]
+    current_long = current_long[['Symbol', 'Current MACD', 'Current Change']].reset_index(drop=True)
+
+    current_short = features_df[(features_df['Current MACD'] < json_info['short_macd_threshold']) & (features_df['Current Change'] > json_info['short_per_threshold'])]
+    current_short = current_short[['Symbol', 'Current MACD', 'Current Change']].reset_index(drop=True)
+
+
+    #Now add colors
+    return render(request, "interface/index.html", {'forward_metrics': forward_metrics, 'current_parameters': json_info, 
+                                                    'all_time_coinwise': dictionary, 'symbols': symbols, 'features': features_df.values.tolist(), 
+                                                    'features_header': list(features_df.columns), 'current_long': current_long.values.tolist(),
+                                                    'current_short': current_short.values.tolist(), 'long_short_headers': list(current_short.columns)})

@@ -400,6 +400,21 @@ def perform_backtest(symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par
     short_close_threshold = short_close_threshold_par
     symbol = symbol_par
 
+    json_info = {}
+    json_info['n_fast'] = n_fast
+    json_info['n_slow'] = n_slow
+    json_info['long_macd_threshold'] = long_macd_threshold_par
+    json_info['long_per_threshold'] = long_per_threshold_par
+    json_info['long_close_threshold'] = long_close_threshold_par
+    json_info['short_macd_threshold'] = short_macd_threshold_par
+    json_info['short_per_threshold'] = short_per_threshold_par
+    json_info['short_close_threshold'] = short_close_threshold_par
+    json_info['initial_cash'] = initial_cash
+    json_info['comission'] = comission
+
+    with open(get_root_dir() + "/data/parameters.json", 'w') as f:
+        json.dump(json_info, f)
+
     features_file = get_root_dir() + "/data/features/{}.csv".format(symbol)
 
     if df is None:
