@@ -103,9 +103,8 @@ def get_features(tweet_df, price_df, coin_name, curr_start, curr_end, minutes=30
     features = features.fillna(0)
 
     if os.path.isfile(features_file):
-        old_features = pd.read_csv(features_file)
-        old_features['Time'] = pd.to_datetime(features['Time'])
-        features = pd.concat([old_features, features])
+        features = pd.concat([pd.read_csv(features_file), features])
+        features['Time'] = pd.to_datetime(features['Time'])
         features = features.sort_values('Time')
         features = features.drop_duplicates('Time',keep='last')
 
@@ -335,6 +334,13 @@ class tradeStrategy(bt.Strategy):
                 else:
                     self.log("HODL {}".format(self.dataopen[0]))
 
+def save_plot(cerebro, curr_dir):
+    output_file(curr_dir + "/backtest.html")
+    b = Bokeh(style='bar', plot_mode="tabs", scheme=Tradimo())
+    b.plot_result(run)
+    
+    figure = cerebro.plot(style ='candlebars')[0][0]
+    figure.savefig(curr_dir + "/backtest.png")
 
 def perform_backtest(symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par, long_per_threshold_par, long_close_threshold_par, 
                     short_macd_threshold_par, short_per_threshold_par, short_close_threshold_par, initial_cash=10000, comission=0.1, df=None):
@@ -409,7 +415,6 @@ def perform_backtest(symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par
 
     df['macd'] = ta.trend.macd(df['sentistrength_total'], n_fast=n_fast, n_slow=n_slow, fillna=True)
     df['macd'] = df['macd'].fillna(0)
-    #calculation has repetition. A lot of. Avoid that
 
     df['Time'] = pd.to_datetime(df['Time'])
 
@@ -420,6 +425,8 @@ def perform_backtest(symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par
     json_data['std'] = df['macd'].std()
 
     df['macd'] = (df['macd'] - json_data['mean'])/json_data['std']
+
+    df = df.dropna(subset=['Time'])
 
     curr_dir = get_root_dir() + "/data/backtest/{}".format(symbol)
 
@@ -459,11 +466,8 @@ def perform_backtest(symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par
     run = cerebro.run()
 
     portfolioValue, trades, operations = run[0].get_logs()
-
-    b = Bokeh(style='bar', plot_mode="tabs", scheme=Tradimo())
-    fig = cerebro.plot(b)
-    output_file(curr_dir + "/backtest.html")
-    # save(fig[0][0])
+    
+    save_plot(cerebro, curr_dir)
 
     df = df.set_index('Time')
     df = df.resample('1D').apply(resampler)
