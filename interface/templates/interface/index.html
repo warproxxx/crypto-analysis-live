@@ -73,14 +73,27 @@
                   Summary</div>
                 <div class="card-body">
                   <div class="table-responsive">
+
+                      <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                          {% if forward_metrics %}
+                            {% for key, value in forward_metrics.items%} 											
+                            <td style="background-color:#f9f9f9;"><b>{{ key }}:</b></td>
+                            <td>{{ value }} %</td>
+                            {% endfor %}
+                          {% else %}
+                            <p class="text-danger">No data found</p>
+                          {% endif %}
+                      </table>
+                    
+                    <center>Coinwise Statistics - All Time</center>
                                                                 
                     <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                        {% if forward_metrics %}
-                        {% for key, value in forward_metrics.items%} 											
+                        {% if all_time_coinwise %}
+                        {% for key, value in all_time_coinwise.items%} 											
                             <td style="background-color:#f9f9f9;"><b>{{ key }}:</b></td>
                             <td>{{ value }} %</td>
 
-                            {% if forloop.counter|divisibleby:4 %}
+                            {% if forloop.counter|divisibleby:8 %}
                             </tr>
                             <tr>
                             {% endif %}
@@ -91,6 +104,8 @@
                         <p class="text-danger">No data found</p>
                         {% endif %}
                     </table>
+
+
                   </div>
                 </div>
                 <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>

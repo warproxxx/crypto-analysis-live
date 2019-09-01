@@ -1,3 +1,8 @@
+'''
+Leaves the old cascade file and substract to create
+
+'''
+
 import pandas as pd
 import numpy as np
 import csv
@@ -224,11 +229,10 @@ def sub_inf(combined_inf, to_remove):
     combined['total_influence'] = combined['total_influence_x'] - combined['total_influence_y']
     combined = combined[['username', 'total_tweets', 'total_influence']]
     combined['avg_influence'] = combined['total_influence']/combined['total_tweets']
+    combined['avg_influence'] = combined['avg_influence'].fillna(0)
     combined.sort_values('total_influence', ascending=False)
     
     return combined
-
-# Leaves the old cascade file and substract to create
 
 def weekly_process():
     dir = get_root_dir()
@@ -272,6 +276,8 @@ def weekly_process():
 
     if 'old_file' in locals():
         to_remove = add_influence_and_all(old_file.drop('inf', axis=1))
-        combined_inf = sub_inf(combined_inf, to_remove)
+        combined_inf = sub_inf(combined_inf, to_remove) #test sub
 
     combined_inf.to_csv(os.path.join(dir, 'data/userwise_influence.csv'), index=None)
+
+weekly_process()

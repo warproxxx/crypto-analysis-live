@@ -82,7 +82,6 @@ def index(request):
     combined_portfolio = pd.DataFrame()
     btc = pd.read_csv('algorithm/data/backtest/BTC/portfolio.csv')
     combined_portfolio['Date'] = btc['Date']
-    combined_portfolio['btc_portfolio'] = btc['hodl']
     dates = []
 
     for file in files:
@@ -91,7 +90,7 @@ def index(request):
         combined_portfolio = curr_df.merge(combined_portfolio, on='Date', how='right')
 
     
-
+    combined_portfolio['btc_portfolio'] = btc['hodl']
     combined_portfolio['btc_portfolio'] = combined_portfolio['btc_portfolio'] * (len(combined_portfolio.columns) - 2)
 
     df = pd.DataFrame.from_dict(coinwise_stats)
@@ -104,9 +103,9 @@ def index(request):
     div.columns = ['Symbol', 'Change']
 
     div['Change'] = div['Change'].round(2)
+    div = div.sort_values('Change', ascending=False)
 
-    dictionary = dict(zip(div.Symbol,div.Change))
-    print(dictionary)
+    
 
     combined_portfolio['portfolio'] = combined_portfolio.drop('btc_portfolio', axis=1).sum(axis=1)
     combined_portfolio = combined_portfolio[['portfolio', 'btc_portfolio']]
@@ -120,16 +119,23 @@ def index(request):
     with open('interface/static/interface/plotly.html', 'w') as file:
         file.write(html)
 
+    dictionary = dict(zip(div.Symbol,div.Change))
+    print(dictionary)
+
+    top_ten = ['TRX', 'OMG', 'MIOTA', 'ZEC', 'LTC', 'ETC', 'XTZ', 'BSV', 'SAN']
+
     forward_metrics = {}
     forward_metrics['Total Return'] = round((sum(df['end_cash'])/sum(df['start_cash'])  - 1) * 100, 2)
-    forward_metrics['Return VS hodl'] = round((sum(df['end_cash'])/sum(df['end_hodl'])  - 1) * 100, 2) #I think hodl return is WRONG because our features file starts way earlier
+    forward_metrics['Return VS hodl all coins'] = round((sum(df['end_cash'])/sum(df['end_hodl'])  - 1) * 100, 2) #I think hodl return is WRONG because our features file starts way earlier    
     
-    # forward_metrics['Return VS Bitcoin hodl'] = round((sum(df['end_cash'])/sum(df['end_hodl'])  - 1) * 100, 2) 
-    #add stuffs like best performer, worst performer, best 24 hours and worst 24 hours and stats of each
-    
+    top_df = df.loc[top_ten]
+    forward_metrics['Total Return - Predetermined Coins'] = round((sum(top_df['end_cash'])/sum(top_df['start_cash'])  - 1) * 100, 2)
+
+    # forward_metrics['Bitcoin hodl VS Portfolio'] = dictionary['btc_portfolio'] 
+    del dictionary['btc_portfolio']
 
     symbols = get_symbols()
 
-    combined = {**forward_metrics, **dictionary}
+    #Now last n days, days started to trade from and most active coins 
 
-    return render(request, "interface/index.html", {'forward_metrics': combined, 'symbols': symbols})
+    return render(request, "interface/index.html", {'forward_metrics': forward_metrics, 'all_time_coinwise': dictionary, 'symbols': symbols})
