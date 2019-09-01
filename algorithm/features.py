@@ -334,14 +334,6 @@ class tradeStrategy(bt.Strategy):
                 else:
                     self.log("HODL {}".format(self.dataopen[0]))
 
-def save_plot(cerebro, curr_dir):
-    output_file(curr_dir + "/backtest.html")
-    b = Bokeh(style='bar', plot_mode="tabs", scheme=Tradimo())
-    b.plot_result(run)
-    
-    figure = cerebro.plot(style ='candlebars')[0][0]
-    figure.savefig(curr_dir + "/backtest.png")
-
 def perform_backtest(symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par, long_per_threshold_par, long_close_threshold_par, 
                     short_macd_threshold_par, short_per_threshold_par, short_close_threshold_par, initial_cash=10000, comission=0.1, df=None):
     '''
@@ -466,8 +458,14 @@ def perform_backtest(symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par
     run = cerebro.run()
 
     portfolioValue, trades, operations = run[0].get_logs()
+
+    # fig = cerebro.plot()
+    # figure = fig[0][0]
+    # figure.savefig(curr_dir + "/backtest.png")
     
-    save_plot(cerebro, curr_dir)
+    output_file(curr_dir + "/backtest.html")
+    b = Bokeh(style='bar', plot_mode="tabs", scheme=Tradimo())
+    b.plot_result(run)
 
     df = df.set_index('Time')
     df = df.resample('1D').apply(resampler)

@@ -1,9 +1,14 @@
 from django.shortcuts import render
+
 import pandas as pd
 import numpy as np
+
 from glob import glob
-from features import create_plot
 from shutil import copy
+
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
 
 def get_stats(symbol):
     stats = {}
@@ -43,6 +48,31 @@ def coin_page(request, symbol):
 
     return render(request, "interface/coinwise.html", {'symbols': symbols, 'forward_metrics': metrics, 'symbol_name': symbol})    
 
+def create_plot(df, col1, col1_display, col2, col2_display):
+    hovertext = []
+
+    for i in range(len(df['Time'])):
+        hovertext.append('{}: '.format(col1_display)+str(round(df[col1][i], 2))
+                         +'<br>{}: '.format(col2_display)+str(round(df[col2][i], 2))
+                        )
+    
+    fig = go.Figure(layout=go.Layout(xaxis={'spikemode': 'across'}))
+    
+    
+
+    fig.add_trace(go.Scatter(x=df['Time'], y=df[col1], name=col1_display, text=hovertext,
+                            marker={'color': '#1f77b4'}
+                            ))
+    
+    fig.add_trace(go.Scatter(x=df['Time'], y=df[col2], name=col2_display, text=hovertext, 
+                             marker={'color': '#d62728'}))
+
+
+    fig.update_layout(xaxis_rangeslider_visible=True)
+    return fig
+
+#Add current prediction and all that. Change the table to better
+
 # Create your views here.
 def index(request):
     #my chart algorithm might be wrong
@@ -60,7 +90,9 @@ def index(request):
         curr_df, coinwise_stats[symbol] = get_stats(symbol)
         combined_portfolio = curr_df.merge(combined_portfolio, on='Date', how='right')
 
-    combined_portfolio['btc_portfolio'] = combined_portfolio['btc_portfolio'] * (len(combined_portfolio.columns) - 3)
+    
+
+    combined_portfolio['btc_portfolio'] = combined_portfolio['btc_portfolio'] * (len(combined_portfolio.columns) - 2)
 
     df = pd.DataFrame.from_dict(coinwise_stats)
     df = df.T
@@ -82,7 +114,7 @@ def index(request):
     combined_portfolio = combined_portfolio.reset_index()
     combined_portfolio = combined_portfolio.rename(columns={'Date': 'Time'})
 
-    fig = create_plot(combined_portfolio, 'portfolio', 'Portfolio Movement', 'btc_portfolio', 'Bitcoin Movement')
+    fig = create_plot(combined_portfolio, 'portfolio', 'Portfolio Movement', 'btc_portfolio', 'Bitcoin HODL Portfolio')
     html = fig.to_html()
 
     with open('interface/static/interface/plotly.html', 'w') as file:

@@ -80,7 +80,7 @@
                             <td style="background-color:#f9f9f9;"><b>{{ key }}:</b></td>
                             <td>{{ value }} %</td>
 
-                            {% if forloop.counter == 2 or forloop.counter == 4 or forloop.counter == 6 or forloop.counter == 8 or forloop.counter == 10 %}
+                            {% if forloop.counter|divisibleby:4 %}
                             </tr>
                             <tr>
                             {% endif %}
@@ -102,7 +102,7 @@
                 <i class="fas fa-chart-area"></i>
                 Combined Performance
             </div>
-            <div class="embed-responsive embed-responsive-4by3 bg-white c-bg col-xs-12 col-sm-12 col-md-12 col-lg-12 nopadding">
+            <div class="embed-responsive embed-responsive-4by3 bg-white c-bg col-xs-12 col-sm-12 col-md-12 col-lg-12 nopadding" style="max-height: 70vh;">
                     <iframe frameborder='0' scrolling='no' src='{% static 'interface/plotly.html' %}' class="embed-responsive-item" style="border:none;" ></iframe>
             </div>
             <div class="card-footer small text-muted">Updated yesterday at 11:59 PM</div>

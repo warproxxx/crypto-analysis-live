@@ -179,43 +179,6 @@ def rescrape_and_add(original, to_scrape):
 
     return new_df, new_profile
 
-# Leaves the old cascade file and substract to create
-
-dir = get_root_dir()
-storagefolder = os.path.join(dir, 'data/storage/all_cleaned')
-
-storagesfiles = glob(storagefolder + "/*")
-combined = merge_csvs(storagesfiles)
-df = pd.read_csv(combined)
-
-df['Time'] = pd.to_datetime(df['Time'])
-df = create_cascades(df) 
-
-df = df.sort_values('Time')
-
-counts = df['cascade'].value_counts().reset_index()
-ids_count = counts[counts['cascade'] > 3][['index']]
-non_existing = ids_count[~ids_count['index'].isin(df['ID'])]
-
-df, profile = rescrape_and_add(df, non_existing)
-df = df.merge(profile[['username', 'total_followers']], left_on='User', right_on='username', how='inner')
-df = df.rename(columns={'Time': 'time', 'total_followers': 'magnitude', 'User': 'user_id'})
-counts = df['cascade'].value_counts().reset_index()
-
-df = df[df['cascade'].isin(counts[counts['cascade'] > 2]['index'])]
-oldcascade_file = os.path.join(dir, 'data/storage/old_cascade.csv')
-df = df[['ID', 'time', 'magnitude', 'user_id', 'cascade']]
-
-if os.path.isfile(oldcascade_file):
-    old_file = pd.read_csv(oldcascade_file)
-    old_file = old_file[old_file['cascade'].isin(df['cascade'])]
-    df.to_csv(oldcascade_file, index=None)
-
-    df = pd.concat([df, old_file])
-    df = df.reset_index()
-else:
-    df.to_csv(oldcascade_file, index=None)
-
 def get_influence(df):
     df = df.reset_index(drop=True)
 
@@ -265,11 +228,50 @@ def sub_inf(combined_inf, to_remove):
     
     return combined
 
-new_inf = add_influence_and_all(df)
-curr_inf = pd.read_csv(os.path.join(dir, 'data/userwise_influence.csv'))
-combined_inf = add_inf(curr_inf, new_inf)
-if 'old_file' in locals():
-    to_remove = add_influence_and_all(old_file.drop('inf', axis=1))
-    combined_inf = sub_inf(combined_inf, to_remove)
+# Leaves the old cascade file and substract to create
 
-combined_inf.to_csv(os.path.join(dir, 'data/userwise_influence.csv'), index=None)
+def weekly_process():
+    dir = get_root_dir()
+    storagefolder = os.path.join(dir, 'data/storage/all_cleaned')
+
+    storagesfiles = glob(storagefolder + "/*")
+    combined = merge_csvs(storagesfiles)
+    df = pd.read_csv(combined)
+
+    df['Time'] = pd.to_datetime(df['Time'])
+    df = create_cascades(df) 
+
+    df = df.sort_values('Time')
+
+    counts = df['cascade'].value_counts().reset_index()
+    ids_count = counts[counts['cascade'] > 3][['index']]
+    non_existing = ids_count[~ids_count['index'].isin(df['ID'])]
+
+    df, profile = rescrape_and_add(df, non_existing)
+    df = df.merge(profile[['username', 'total_followers']], left_on='User', right_on='username', how='inner')
+    df = df.rename(columns={'Time': 'time', 'total_followers': 'magnitude', 'User': 'user_id'})
+    counts = df['cascade'].value_counts().reset_index()
+
+    df = df[df['cascade'].isin(counts[counts['cascade'] > 2]['index'])]
+    oldcascade_file = os.path.join(dir, 'data/storage/old_cascade.csv')
+    df = df[['ID', 'time', 'magnitude', 'user_id', 'cascade']]
+
+    if os.path.isfile(oldcascade_file):
+        old_file = pd.read_csv(oldcascade_file)
+        old_file = old_file[old_file['cascade'].isin(df['cascade'])]
+        df.to_csv(oldcascade_file, index=None)
+
+        df = pd.concat([df, old_file])
+        df = df.reset_index()
+    else:
+        df.to_csv(oldcascade_file, index=None)
+
+    new_inf = add_influence_and_all(df)
+    curr_inf = pd.read_csv(os.path.join(dir, 'data/userwise_influence.csv'))
+    combined_inf = add_inf(curr_inf, new_inf)
+
+    if 'old_file' in locals():
+        to_remove = add_influence_and_all(old_file.drop('inf', axis=1))
+        combined_inf = sub_inf(combined_inf, to_remove)
+
+    combined_inf.to_csv(os.path.join(dir, 'data/userwise_influence.csv'), index=None)
