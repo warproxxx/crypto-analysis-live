@@ -39,11 +39,12 @@ def get_features_stats(symbol):
     features['Change'] = features['Change'].fillna(0)
     
     stats['MACD Long Fulfilled'] = len(features[features['macd'] > json_info['long_macd_threshold']])
-    stats['Long Change Fulfilled'] = len(features[features['Change'] > json_info['long_per_threshold']])
-    stats['Long All Fulfilled'] = len(features[(features['macd'] > json_info['long_macd_threshold']) & (features['Change'] > json_info['long_per_threshold'])])
+    stats['Long Change Fulfilled'] = len(features[features['Change'] < json_info['long_per_threshold']])
+    stats['Long All Fulfilled'] = len(features[(features['macd'] > json_info['long_macd_threshold']) & (features['Change'] < json_info['long_per_threshold'])])
+    
     stats['MACD Short Fulfilled'] = len(features[features['macd'] < json_info['short_macd_threshold']])
-    stats['Short Change Fulfilled'] = len(features[features['Change'] < json_info['short_per_threshold']])
-    stats['Short All Fulfilled'] = len(features[(features['macd'] < json_info['short_macd_threshold']) & (features['Change'] < json_info['short_per_threshold'])])
+    stats['Short Change Fulfilled'] = len(features[features['Change'] > json_info['short_per_threshold']])
+    stats['Short All Fulfilled'] = len(features[(features['macd'] < json_info['short_macd_threshold']) & (features['Change'] > json_info['short_per_threshold'])])
     
     stats['Current Change'] = features.iloc[-1]['Change']
     stats['Current MACD'] = features.iloc[-1]['macd']
@@ -56,6 +57,64 @@ def get_symbols():
     symbols.sort()
 
     return symbols
+
+def get_json_info(symbol):
+    with open(get_root_dir() + "/data/parameters.json") as f:
+        json_info = json.load(f)
+
+    return json_info
+
+def get_position_prediction_move(symbol):
+    features = get_features_stats(symbol)
+
+    current_values = {}
+    current_values['Change'] = features['Current Change']
+    current_values['MACD'] = features['Current MACD']
+
+    with open(get_root_dir() + "/data/backtest/{}/stats.json".format(symbol)) as f:
+        stats = json.load(f)
+
+    current_position = "None"
+    
+    if stats['open'] > 0:
+        trades = pd.read_csv(get_root_dir() + "/data/backtest/{}/trades.csv".format(symbol))
+        pos = trades['Type'].iloc[-1]
+        if pos == "BUY":
+            current_position = 'LONG'
+        elif pos == "SELL":
+            current_position = 'SHORT'
+        elif current_position == 'REJECTION':
+            pos = trades['Type'].iloc[-2]
+
+            if pos == "BUY":
+                current_position = 'LONG'
+            elif pos == "SELL":
+                current_position = 'SHORT'
+            else:
+                current_position = 'REJECTION'
+    
+    current_prediction = "None"
+
+    json_info = get_json_info(symbol)
+
+    if ((current_values['MACD'] > json_info['long_macd_threshold']) and (current_values['Change'] < json_info['long_per_threshold'])):
+        current_prediction = "LONG"
+    elif ((current_values['MACD'] < json_info['short_macd_threshold']) and (current_values['Change'] > json_info['short_per_threshold'])):
+        current_prediction = "SHORT"
+
+
+    current_move = "HODL"
+
+    if current_position == "LONG":
+        if current_prediction == "SHORT":
+            current_move = "CLOSE"
+    elif current_position == "SHORT":
+        if current_prediction == "LONG":
+            current_move = "CLOSE"
+    else:
+        current_move = "WAIT AND WATCH"
+
+    return current_values, current_position, current_prediction, current_move
 
 def coin_page(request, symbol):
     symbols = get_symbols()
@@ -70,9 +129,16 @@ def coin_page(request, symbol):
     copy(old_backtest_file, backtest_file)
 
     _, metrics = get_stats(symbol)
-    print(metrics)
 
-    return render(request, "interface/coinwise.html", {'symbols': symbols, 'forward_metrics': metrics, 'symbol_name': symbol})    
+    #Remove all rejections
+    current_values, current_position, current_prediction, current_move = get_position_prediction_move(symbol)
+
+    macd = round(current_values['MACD'], 2)
+    change = round(current_values['Change'], 2)
+
+    return render(request, "interface/coinwise.html", {'symbols': symbols, 'forward_metrics': metrics, 'symbol_name': symbol, 
+                                                        'macd' : macd, 'change': change, 'current_prediction': current_prediction
+                                                        , 'current_position': current_position, 'current_move': current_move})    
 
 def create_plot(df, col1, col1_display, col2, col2_display):
     hovertext = []
@@ -97,11 +163,8 @@ def create_plot(df, col1, col1_display, col2, col2_display):
     fig.update_layout(xaxis_rangeslider_visible=True)
     return fig
 
-#Add current prediction and all that. Change the table to better
-
 # Create your views here.
 def index(request):
-    #my chart algorithm might be wrong
     files = glob('algorithm/data/backtest/*')
 
     coinwise_stats = {}
@@ -167,31 +230,43 @@ def index(request):
 
     #Features info calculation
     files = glob('algorithm/data/backtest/*')
-    features_df = pd.DataFrame()
+    # features_df = pd.DataFrame()
 
+
+    # for file in files:
+    #     symbol = file.split('/')[-1].replace('.csv', '')
+    #     curr_features = get_features_stats(symbol)
+    #     curr_features['Symbol'] = symbol
+    #     features_df = features_df.append(pd.Series(curr_features), ignore_index=True)
+
+    # with open(get_root_dir() + "/data/parameters.json") as f:
+    #     json_info = json.load(f)
+
+    # features_df = features_df[['Symbol'] + list(features_df.columns[:-1])]
+
+    # features_df = features_df.sort_values('Current MACD').reset_index(drop=True)
+    # features_df = features_df.round(2)
+
+    # current_long = features_df[(features_df['Current MACD'] > json_info['long_macd_threshold']) & (features_df['Current Change'] < json_info['long_per_threshold'])]
+    # current_long = current_long[['Symbol', 'Current MACD', 'Current Change']].reset_index(drop=True)
+
+    # current_short = features_df[(features_df['Current MACD'] < json_info['short_macd_threshold']) & (features_df['Current Change'] > json_info['short_per_threshold'])]
+    # current_short = current_short[['Symbol', 'Current MACD', 'Current Change']].reset_index(drop=True)
+
+    files = glob('algorithm/data/backtest/*')
+    position_df = pd.DataFrame(columns=['Symbol', 'Change', 'MACD', 'Position', 'Prediction', 'Move'])
 
     for file in files:
         symbol = file.split('/')[-1].replace('.csv', '')
-        curr_features = get_features_stats(symbol)
-        curr_features['Symbol'] = symbol
-        features_df = features_df.append(pd.Series(curr_features), ignore_index=True)
-
-    with open(get_root_dir() + "/data/parameters.json") as f:
-        json_info = json.load(f)
-
-    features_df = features_df[['Symbol'] + list(features_df.columns[:-1])]
-
-    features_df = features_df.sort_values('Current MACD').reset_index(drop=True)
-    features_df = features_df.round(2)
-
-    current_long = features_df[(features_df['Current MACD'] > json_info['long_macd_threshold']) & (features_df['Current Change'] < json_info['long_per_threshold'])]
-    current_long = current_long[['Symbol', 'Current MACD', 'Current Change']].reset_index(drop=True)
-
-    current_short = features_df[(features_df['Current MACD'] < json_info['short_macd_threshold']) & (features_df['Current Change'] > json_info['short_per_threshold'])]
-    current_short = current_short[['Symbol', 'Current MACD', 'Current Change']].reset_index(drop=True)
+        current_values, current_position, current_prediction, current_move = get_position_prediction_move(symbol)
+        
+        ser = pd.Series({'Symbol': symbol, 'Change': round(current_values['Change'], 2), 'MACD': round(current_values['MACD'], 2), 
+            'Position': current_position, 'Prediction': current_prediction, 'Move': current_move})
+        position_df = position_df.append(ser, ignore_index=True)
 
 
-    #Now add colors
+    #add currently open positions. Create it in notebook
+
     return render(request, "interface/index.html", {'forward_metrics': forward_metrics, 'current_parameters': json_info, 
                                                     'all_time_coinwise': dictionary, 'symbols': symbols, 'features': features_df.values.tolist(), 
                                                     'features_header': list(features_df.columns), 'current_long': current_long.values.tolist(),

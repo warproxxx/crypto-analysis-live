@@ -23,6 +23,7 @@ import ta
 import backtrader as bt
 
 from utils.common_utils import get_root_dir
+from utils.backtest_parameter import *
 
 #maybe create a percentage of influential users
 def tweets_to_features(group):
@@ -472,6 +473,16 @@ def perform_backtest(symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par
 
     run = cerebro.run()
 
+    analysis = run[0].analyzers.getbyname('tradeanalyzer').get_analysis()
+
+    trade_analyzer = {}
+    trade_analyzer['total'] = analysis['total']['total']
+    trade_analyzer['open'] = analysis['total']['open']
+    trade_analyzer['closed'] = analysis['total']['closed']
+
+    with open(curr_dir + "/stats.json", 'w') as f:
+        json.dump(trade_analyzer, f)
+
     portfolioValue, trades, operations = run[0].get_logs()
 
     # fig = cerebro.plot()
@@ -495,3 +506,12 @@ def perform_backtest(symbol_par, n_fast_par, n_slow_par, long_macd_threshold_par
 
     with open(os.path.join(curr_dir, "data.json"), 'w') as fp:
         json.dump(json_data, fp)
+
+if __name__ == "__main__":
+    keywords = pd.read_csv(get_root_dir() + '/keywords.csv')
+
+    for idx, row in keywords.iterrows():
+        perform_backtest(row['Symbol'], n_fast_par=n_fast_par, n_slow_par=n_slow_par, long_macd_threshold_par=long_macd_threshold_par, 
+                        long_per_threshold_par=long_per_threshold_par, long_close_threshold_par=long_close_threshold_par, 
+                        short_macd_threshold_par=short_macd_threshold_par, short_per_threshold_par=short_per_threshold_par, 
+                        short_close_threshold_par=short_close_threshold_par, initial_cash=initial_cash, comission=comission)

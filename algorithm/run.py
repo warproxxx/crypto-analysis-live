@@ -15,6 +15,7 @@ from twitter_stream import twitter_stream
 from price_stream import price_stream
 from utils.common_utils import get_root_dir, merge_csvs
 from utils.get_price_data import get_price
+from utils.backtest_parameter import *
 from process import processor, get_sentiment, clean_further, add_keyword, clean_profile
 
 # t = Thread(target=twitter_stream)
@@ -144,7 +145,7 @@ while True:
 
         # if currentTime.minute % 30 != 0:
 
-        #Bokeh is wrong. Portfolio file is right
-        perform_backtest(row['Symbol'], n_fast_par=24, n_slow_par=52, long_macd_threshold_par=2, long_per_threshold_par=1, 
-                        long_close_threshold_par=1, short_macd_threshold_par=-1, short_per_threshold_par=-1, short_close_threshold_par=0.5,
-                        initial_cash=10000, comission=0.1)
+        perform_backtest(row['Symbol'], n_fast_par=n_fast_par, n_slow_par=n_slow_par, long_macd_threshold_par=long_macd_threshold_par, 
+                        long_per_threshold_par=long_per_threshold_par, long_close_threshold_par=long_close_threshold_par, 
+                        short_macd_threshold_par=short_macd_threshold_par, short_per_threshold_par=short_per_threshold_par, 
+                        short_close_threshold_par=short_close_threshold_par, initial_cash=initial_cash, comission=comission)
