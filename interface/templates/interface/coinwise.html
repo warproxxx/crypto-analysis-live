@@ -116,7 +116,12 @@
                         {% if forward_metrics %}
                         {% for key, value in forward_metrics.items%} 											
                             <td style="background-color:#f9f9f9;"><b>{{ key }}:</b></td>
+
+                            {% if forloop.counter == 1 or forloop.counter == 2 %}
+                            <td class="colored">{{ value }} %</td>
+                            {% else %}
                             <td>{{ value }}</td>
+                            {% endif %}
 
                             {% if forloop.counter == 2 or forloop.counter == 4 or forloop.counter == 6 or forloop.counter == 8 or forloop.counter == 10 %}
                             </tr>

@@ -230,44 +230,33 @@ def index(request):
 
     #Features info calculation
     files = glob('algorithm/data/backtest/*')
-    # features_df = pd.DataFrame()
-
-
-    # for file in files:
-    #     symbol = file.split('/')[-1].replace('.csv', '')
-    #     curr_features = get_features_stats(symbol)
-    #     curr_features['Symbol'] = symbol
-    #     features_df = features_df.append(pd.Series(curr_features), ignore_index=True)
-
-    # with open(get_root_dir() + "/data/parameters.json") as f:
-    #     json_info = json.load(f)
-
-    # features_df = features_df[['Symbol'] + list(features_df.columns[:-1])]
-
-    # features_df = features_df.sort_values('Current MACD').reset_index(drop=True)
-    # features_df = features_df.round(2)
-
-    # current_long = features_df[(features_df['Current MACD'] > json_info['long_macd_threshold']) & (features_df['Current Change'] < json_info['long_per_threshold'])]
-    # current_long = current_long[['Symbol', 'Current MACD', 'Current Change']].reset_index(drop=True)
-
-    # current_short = features_df[(features_df['Current MACD'] < json_info['short_macd_threshold']) & (features_df['Current Change'] > json_info['short_per_threshold'])]
-    # current_short = current_short[['Symbol', 'Current MACD', 'Current Change']].reset_index(drop=True)
-
-    files = glob('algorithm/data/backtest/*')
+    features_df = pd.DataFrame()
     position_df = pd.DataFrame(columns=['Symbol', 'Change', 'MACD', 'Position', 'Prediction', 'Move'])
 
     for file in files:
         symbol = file.split('/')[-1].replace('.csv', '')
+        curr_features = get_features_stats(symbol)
+        curr_features['Symbol'] = symbol
+        features_df = features_df.append(pd.Series(curr_features), ignore_index=True)
         current_values, current_position, current_prediction, current_move = get_position_prediction_move(symbol)
-        
-        ser = pd.Series({'Symbol': symbol, 'Change': round(current_values['Change'], 2), 'MACD': round(current_values['MACD'], 2), 
-            'Position': current_position, 'Prediction': current_prediction, 'Move': current_move})
-        position_df = position_df.append(ser, ignore_index=True)
+        position_df = position_df.append(pd.Series({'Symbol': symbol, 'Change': round(current_values['Change'], 2), 
+                                         'MACD': round(current_values['MACD'], 2), 'Position': current_position, 'Prediction': current_prediction, 
+                                         'Move': current_move}), ignore_index=True)
+
+    with open(get_root_dir() + "/data/parameters.json") as f:
+        json_info = json.load(f)
+
+    features_df = features_df[['Symbol'] + list(features_df.columns[:-1])]
+
+    features_df = features_df.sort_values('Current MACD').reset_index(drop=True)
+    features_df = features_df.round(2)
 
 
-    #add currently open positions. Create it in notebook
+    predictions_df = position_df[position_df['Prediction'] != "None"].reset_index(drop=True)
+    position_df = position_df[position_df['Position'] != 'None'].reset_index(drop=True)
 
     return render(request, "interface/index.html", {'forward_metrics': forward_metrics, 'current_parameters': json_info, 
                                                     'all_time_coinwise': dictionary, 'symbols': symbols, 'features': features_df.values.tolist(), 
-                                                    'features_header': list(features_df.columns), 'current_long': current_long.values.tolist(),
-                                                    'current_short': current_short.values.tolist(), 'long_short_headers': list(current_short.columns)})
+                                                    'features_header': list(features_df.columns), 'predictions': predictions_df.values.tolist(),
+                                                    'positions_predictions_headers': list(position_df.columns), 
+                                                    'positions': position_df.values.tolist()})

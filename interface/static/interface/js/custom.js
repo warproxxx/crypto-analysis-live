@@ -18,6 +18,23 @@ $(document).ready(function(){
 });
 
 $(document).ready(function(){
+    $('.table tr.colored').each(function(){
+        $td = $(this).find("td:nth-child(4)"); 
+        var txt = $td.text();
+
+        if (txt.includes("SHORT")) {
+            $(this).css('background-color','#FF0000');
+            $(this).css('color','white');
+        }
+        else if (txt.includes("LONG")){
+            $(this).css('background-color','#008000');
+            $(this).css('color','white');
+        }
+        
+    });
+});
+
+$(document).ready(function(){
     $('.table td.colored_text').each(function(){
         var txt = $(this).text();
         

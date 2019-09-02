@@ -88,27 +88,28 @@
                           {% endif %}
                       </table> 
                     <br/>
-                    <b>Current Long:</b>
+            
+                    <b>Current Predictions:</b>
                     <table class="table table-bordered js-sort-table" id="dataTable" width="100%" cellspacing="0">
-                        {% if current_long %}
+                        {% if predictions %}
                         <thead>
                           <tr>
-                              {% for header in long_short_headers %}
+                              {% for header in positions_predictions_headers %}
                                 <th>{{ header }}</th>
                               {% endfor %}
                           </tr>
                         </thead>
                         <tbody>
-                        {% for list in current_long %} 
-                            <tr>
+                        {% for list in predictions %} 
+                            <tr class="colored">
                                 {% for val in list %}
-                                  <td style="background-color:#008000; color:white;">
-                                      {% if forloop.counter == 1 %}
-                                      <b>{{ val }}</b>
-                                      {% else %}
-                                      {{ val }}
-                                      {% endif %}
-                                    </td>
+                                <td>
+                                    {% if forloop.counter == 1 %}
+                                    <b>{{ val }}</b>
+                                    {% else %}
+                                    {{ val }}
+                                    {% endif %}
+                                  </td>
                                 {% endfor %}
                             </tr>
                         {% endfor %}
@@ -118,21 +119,22 @@
                         <p class="text-danger">No data found</p>
                         {% endif %}
                     </table>
-                    <b>Current Short:</b>
+
+                    <b>Current Positions:</b>
                     <table class="table table-bordered js-sort-table" id="dataTable" width="100%" cellspacing="0">
-                        {% if current_short %}
+                        {% if positions %}
                         <thead>
                           <tr>
-                              {% for header in long_short_headers %}
+                              {% for header in positions_predictions_headers %}
                                 <th>{{ header }}</th>
                               {% endfor %}
                           </tr>
                         </thead>
                         <tbody>
-                        {% for list in current_short %} 
-                            <tr>
+                        {% for list in positions %} 
+                            <tr class="colored">
                                 {% for val in list %}
-                                <td style="background-color:#FF0000; color:white;">
+                                <td>
                                     {% if forloop.counter == 1 %}
                                     <b>{{ val }}</b>
                                     {% else %}
