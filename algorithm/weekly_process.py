@@ -11,6 +11,7 @@ from glob import glob
 import os
 import swifter
 import shutil
+import tarfile
 
 import tweepy
 from ttp import ttp
@@ -177,16 +178,15 @@ def rescrape_and_add(original, to_scrape):
 
 def get_influence(df):
     df = df.reset_index(drop=True)
-
+    
     try:
         p_ij = P(df,r = -0.000068)
         inf, m_ij = influence(p_ij)
         df['inf'] = inf
     except:
-        df['inf'] = 0
-        df = df[0:0]
-
-    df = df[['ID', 'inf']]
+        df['inf'] = 'invalid'
+        
+    df = df[['ID', 'inf', 'cascade']]
     return df
 
 def get_influence_metrics(df):
@@ -200,7 +200,10 @@ def get_influence_metrics(df):
 def add_influence_and_all(df):
     d = df.groupby('cascade').apply(get_influence)
     d = d.drop_duplicates()
-    d = d.reset_index()
+    
+    invalid = d[d['inf'] == 'invalid']
+    invalid.to_csv(get_root_dir() + "/data/storage/invalid.csv", mode='a')
+    d = d[d['inf'] != 'invalid']
     df = df.merge(d, on='ID')
     df = df.drop('cascade_y', axis=1).rename(columns={'cascade_x':'cascade'})
     new_inf = df.groupby('user_id').apply(get_influence_metrics)
@@ -230,6 +233,24 @@ def sub_inf(combined_inf, to_remove):
     combined.sort_values('total_influence', ascending=False)
     
     return combined
+
+def tar_and_remove(files):
+    archive_dir = get_root_dir() + "/data/archive"
+
+    if not os.path.isdir(archive_dir):
+        os.makedirs(archive_dir)
+    
+
+    tar = tarfile.open(archive_dir + "/{}.tar.gz".format(int(time.time())), "w:gz", compresslevel=5)
+
+    for name in files:
+        tar.add(name)
+    
+    tar.close()
+
+    for file in files:
+        os.remove(file)
+
 
 def weekly_process():
     dir = get_root_dir()
@@ -276,6 +297,9 @@ def weekly_process():
         combined_inf = sub_inf(combined_inf, to_remove) #test sub
 
     combined_inf.to_csv(os.path.join(dir, 'data/userwise_influence.csv'), index=None)
+
+    #tar and remove all_cleaned
+    tar_and_remove(storagesfiles)
 
 if __name__ == "__main__":
     weekly_process()
