@@ -1,6 +1,7 @@
 import os
 import shutil
-from threading import Thread
+from threading import Timer,Thread,Event
+import threading
 from glob import glob
 
 import pandas as pd
@@ -32,7 +33,7 @@ def save_to_file(df):
         os.makedirs(coinwise_folder)
 
     savefile = "{}/{}.csv".format(coinwise_folder, keyword)
-    df.to_csv(savefile, index=None)
+    df.to_csv(savefile, index=None, mode='a')
 
 def get_keywords():
     keywords = pd.read_csv(get_root_dir() + '/keywords.csv')
@@ -80,14 +81,17 @@ def one_minute_cleaning():
 
     df.to_csv(savefile, index=None)
 
-    os.makedirs(dir + "/data/temp/profiles")
+    temp_profile_dir = os.path.join(dir, "data/temp/profiles")
+
+    if not os.path.isdir(temp_profile_dir):
+        os.makedirs(temp_profile_dir)
     
     user_info = clean_profile(user_info)
-    user_info.to_csv(dir + "/data/temp/profiles/{}.csv".format(int(time.time())), index=None)
-    #five minute profile processes. It sent there because profile cleaning takes time.
+    user_info.to_csv(temp_profile_dir + "/{}.csv".format(int(time.time())), index=None)
+    #five minute profile processes performes remaining
 
     df = df.sort_values('Time')
-    df.groupby('keyword').apply(save_to_file) #should be appended to this file. Features have to be added
+    df.groupby('keyword').apply(save_to_file)
 
     curr_start = df.iloc[0]['Time']
     curr_end = df.iloc[-1]['Time']
@@ -115,7 +119,7 @@ def one_minute_cleaning():
 
         features = get_features(tweet_df, price_df, row['Symbol'], curr_start, curr_end)
 
-def ten_minute():
+def ten_minute_profile():
     files = dir + "/data/temp/profiles/*"
     temp_profiles = merge_csvs(files)
     user_info = pd.read_csv(temp_profiles)
@@ -130,7 +134,7 @@ def ten_minute():
     for file in files:
         os.remove(file)
 
-def thirty_minutes_backtest():
+def ten_minutes_backtest():
     keywords = get_keywords()
 
     for idx, row in keywords.iterrows():
@@ -139,22 +143,55 @@ def thirty_minutes_backtest():
                     short_macd_threshold_par=short_macd_threshold_par, short_per_threshold_par=short_per_threshold_par, 
                     short_close_threshold_par=short_close_threshold_par, initial_cash=initial_cash, comission=comission)
 
-def three_day():
+def three_day_influence():
     weekly_process()
 
+class MyThread(Thread):
+    def __init__(self, event, hFunction, seconds):
+        Thread.__init__(self)
+        self.stopped = event
+        self.seconds = seconds
+        self.hFunction = hFunction
+
+    def run(self):
+        while not self.stopped.wait(self.seconds):
+            self.hFunction()
+
 if __name__ == "__main__":
-    t = Thread(target=twitter_stream)
-    t.start()
+    twitterThread = Thread(target=twitter_stream)
+    twitterThread.start()
 
     print('Started Live Tweet Collection')
-
-    t = Thread(target=price_stream)
-    t.start()
+    price_stream()
+    #Streaming price first time
 
     print('Started Live Price Collection')
+
+    priceFlag = Event()
+    thread = MyThread(priceFlag, price_stream, 30)
+    thread.start()
 
     dir = get_root_dir()
     temp_dir = os.path.join(dir, 'data/temp')
 
     if not os.path.isdir(temp_dir):
         os.makedirs(temp_dir)
+
+
+    oneFlag = Event()
+    oneThread = MyThread(oneFlag, one_minute_cleaning, 60)
+    oneThread.start()
+
+    tenFlag = Event()
+    tenThread = MyThread(oneFlag, ten_minute_profile, 60)
+    tenThread.start()
+
+    tenBacktestFlag = Event()
+    tenBacktestThread = MyThread(oneFlag, ten_minutes_backtest, 60)
+    tenBacktestThread.start()
+
+    threeInfluenceFlag = Event()
+    threeInfluenceThread = MyThread(oneFlag, three_day_influence, 60)
+    threeInfluenceThread.start()
+
+    #During live run, I should use the second last, not the last as the current prediction.

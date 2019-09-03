@@ -69,45 +69,39 @@ def clean_price(df):
     return df
 
 def price_stream():
-    while True:
+    keywords = pd.read_csv(get_root_dir() + '/keywords.csv')
 
-        try:
-            time.sleep(30)
-            keywords = pd.read_csv(get_root_dir() + '/keywords.csv')
+    coin_dir = get_root_dir() + "/data/price"
 
-            coin_dir = get_root_dir() + "/data/price"
+    if not os.path.isdir(coin_dir):
+        os.makedirs(coin_dir)
+    
+    for idx, row in keywords.iterrows():
+        start_timestamp = 1561939200000
 
-            if not os.path.isdir(coin_dir):
-                os.makedirs(coin_dir)
-            
-            for idx, row in keywords.iterrows():
-                start_timestamp = 1561939200000
+        exchange_name = row['exchange_name']
+        pairname = row['pair_name'].replace('/', '')
 
-                exchange_name = row['exchange_name']
-                pairname = row['pair_name'].replace('/', '')
+        current_file = coin_dir + "/{}.csv".format(row['Symbol'])
+        print(current_file)
+        
+        all_df = pd.DataFrame()
 
-                current_file = coin_dir + "/{}.csv".format(row['Symbol'])
-                print(current_file)
-                
-                all_df = pd.DataFrame()
+        if os.path.isfile(current_file):
+            all_df = pd.read_csv(current_file)
 
-                if os.path.isfile(current_file):
-                    all_df = pd.read_csv(current_file)
+            if len(all_df) > 0:
+                all_df['Time'] = pd.to_datetime(all_df['Time'])
+                start_timestamp = all_df['Time'].astype(int).iloc[-1] // 10**6
 
-                    if len(all_df) > 0:
-                        all_df['Time'] = pd.to_datetime(all_df['Time'])
-                        start_timestamp = all_df['Time'].astype(int).iloc[-1] // 10**6
+        start_timestamp = int(start_timestamp)
+        
+        if row['exchange_name'] == 'Binance':
+            curr_df = get_binance_data(pairname, start_timestamp)
+        elif row['exchange_name'] == 'Bitfinex':
+            curr_df = get_bitfinex_data(pairname, start_timestamp)
 
-                start_timestamp = int(start_timestamp)
-                
-                if row['exchange_name'] == 'Binance':
-                    curr_df = get_binance_data(pairname, start_timestamp)
-                elif row['exchange_name'] == 'Bitfinex':
-                    curr_df = get_bitfinex_data(pairname, start_timestamp)
+        full_df = pd.concat([all_df, curr_df])
+        full_df = clean_price(full_df)
 
-                full_df = pd.concat([all_df, curr_df])
-                full_df = clean_price(full_df)
-
-                full_df.to_csv(current_file, index=None)
-        except:
-            pass
+        full_df.to_csv(current_file, index=None)
