@@ -46,18 +46,9 @@ def tweets_to_features(group):
     except:
         features['sentistrength_total'] = 0
         
-#     try:
-#         features['vader_total'] = sum(group['vader_emotion'] * group['avg_influence'])
-#     except:
-#         features['vader_total'] = 0
     
-    # try:
-    #     features['sentistrength_total_mean'] = sum(group['pos_neg'] * group['avg_influence'])/sum(group['avg_influence'])
-    # except:
-    #     features['sentistrength_total_mean'] = 0
-
-    try: #temporary check
-        features['sentistrength_total_mean'] = sum(group['pos_neg'])/len(group)
+    try:
+        features['sentistrength_total_mean'] = sum(group['pos_neg'] * group['avg_influence'])/sum(group['avg_influence'])
     except:
         features['sentistrength_total_mean'] = 0
         
