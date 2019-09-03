@@ -24,6 +24,7 @@ import backtrader as bt
 
 from utils.common_utils import get_root_dir
 from utils.backtest_parameter import *
+from utils.get_price_data import get_price
 
 #maybe create a percentage of influential users
 def tweets_to_features(group):
@@ -50,8 +51,13 @@ def tweets_to_features(group):
 #     except:
 #         features['vader_total'] = 0
     
-    try:
-        features['sentistrength_total_mean'] = sum(group['pos_neg'] * group['avg_influence'])/sum(group['avg_influence'])
+    # try:
+    #     features['sentistrength_total_mean'] = sum(group['pos_neg'] * group['avg_influence'])/sum(group['avg_influence'])
+    # except:
+    #     features['sentistrength_total_mean'] = 0
+
+    try: #temporary check
+        features['sentistrength_total_mean'] = sum(group['pos_neg'])/len(group)
     except:
         features['sentistrength_total_mean'] = 0
         
@@ -107,7 +113,7 @@ def get_features(tweet_df, price_df, coin_name, curr_start, curr_end, minutes=30
         features = pd.concat([pd.read_csv(features_file), features])
         features['Time'] = pd.to_datetime(features['Time'])
         features = features.sort_values('Time')
-        features = features.drop_duplicates('Time',keep='last')
+        features = features.drop_duplicates('Time',keep='last') #insted have to combine features here
 
     features.to_csv(features_file, index=None)
 
@@ -511,6 +517,24 @@ if __name__ == "__main__":
     keywords = pd.read_csv(get_root_dir() + '/keywords.csv')
 
     for idx, row in keywords.iterrows():
+        curr_start = pd.Timestamp('2019-08-09 05:45:52')
+        curr_end = pd.Timestamp('2019-08-27 09:19:11')
+
+        dir = get_root_dir()
+
+        tweet_df = pd.read_csv(dir + '/data/coinwise/{}.csv'.format(row['Symbol']))
+        tweet_df['Time'] = pd.to_datetime(tweet_df['Time'])
+
+        price_df = get_price(row['Symbol'])
+
+
+        tweet_df = tweet_df.sort_values('Time')
+        tweet_df = tweet_df.set_index('Time')
+        tweet_df.index = tweet_df.index.ceil(freq='30Min')  
+        tweet_df = tweet_df.reset_index()
+
+        features = get_features(tweet_df, price_df, row['Symbol'], curr_start, curr_end)
+
         perform_backtest(row['Symbol'], n_fast_par=n_fast_par, n_slow_par=n_slow_par, long_macd_threshold_par=long_macd_threshold_par, 
                         long_per_threshold_par=long_per_threshold_par, long_close_threshold_par=long_close_threshold_par, 
                         short_macd_threshold_par=short_macd_threshold_par, short_per_threshold_par=short_per_threshold_par, 
