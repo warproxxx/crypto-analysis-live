@@ -1,4 +1,5 @@
 data/
+env/
 temp/
 !meta_analyse/data/symbols.csv
 !meta_analyse/data/price_data/*
