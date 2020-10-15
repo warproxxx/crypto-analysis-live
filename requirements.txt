@@ -1,0 +1,8 @@
+Django==2.2.4
+django-mathfilters
+django-widget-tweaks
+pandas
+plotly
+backtrader-plotting==0.5.3
+backtrader
+Bokeh==1.0.4
